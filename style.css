@@ -1,0 +1,548 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+    padding: 0;
+}
+:root {
+    --background-color: rgb(0, 1, 12);
+    --text-color: white;
+    --text-color1: rgb(0, 153, 255);
+    --space-p-color: rgb(0, 255, 0);
+    --secondary-color: blue;
+}
+@font-face {
+    font-family: "Alien";
+    src: url(/Fonts/Alien-Encounters-Solid-Regular.ttf) format("truetype");
+}
+@font-face {
+    font-family: "cybergame";
+    src: url(/Fonts/Cybergame-Regular\ Italic.ttf) format("truetype");
+}
+@font-face {
+    font-family: "boxigen";
+    src: url(/Fonts/BOXIGEN.ttf) format("truetype");
+}
+/* Header stylings */
+header {
+    display: flex;
+    font-family: "boxigen";
+    width: 100%;
+    height: 40px;
+    justify-content: center;
+    z-index: 1000;
+    position: fixed;
+}
+nav {
+    display: flex;
+    justify-content: end;
+    width: 100%;
+}
+nav ul {
+    display: flex;
+    gap: 12px;
+}
+nav ul li {
+    list-style: none;
+    font-size: 1.4rem;
+}
+nav ul li:hover {
+    transform: translateY(0.1rem);
+}
+nav ul li a {
+    text-decoration: none;
+    color: var(--text-color);
+}
+nav ul li a:hover {
+    color: rgb(0, 108, 180);
+}
+.fin {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: 34px;
+    left: 838px;
+    border-top-right-radius: 5px;
+    border: 2px solid rgba(0, 0, 0, 0.5);
+    border-top-color: rgba(0, 0, 0, 0.514);
+    backdrop-filter: blur(1px);
+    border-left: 0cap;
+    border-bottom: 0cap;
+    background-color: rgba(0, 0, 0, 0);
+    z-index: 100;
+}
+.fin2 {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: 36px;
+    left: 836px;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0);
+    z-index: 200;
+}
+
+.lheade {
+    padding: 10px 5px 40px 0;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+    background-color: rgba(0, 0, 0, 0.555);
+    width: 100%;
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 70% 100%, 70% 70%, 0% 70%);
+    position: relative;
+    z-index: 1;
+}
+/* Home section  */
+#home {
+    display: flex;
+    width: 100%;
+    height: 800px;
+    padding: 120px 0 0 0;
+    background-image: url(/img/background-image.jpg);
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+.hero {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.596);
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+}
+.hero h1 {
+    font-size: 12rem;
+    color: rgba(0, 0, 0, 0);
+    text-align: center;
+    font-family: Alien;
+    position: relative;
+}
+.hero h1::after {
+    position: absolute;
+    inset: 0 0 0 0;
+    content: attr(data-content);
+    -webkit-text-stroke: 2px white;
+    color: transparent;
+    z-index: 2;
+}
+.hero p {
+    color: var(--text-color);
+    font-size: 2rem;
+    font-family: sans-serif;
+    text-align: center;
+}
+#gallery {
+    display: flex;
+    flex: column;
+    width: 100%;
+    height: 600px;
+}
+.previews {
+    width: 100%;
+}
+.previews h1 {
+    text-align: center;
+}
+.carzpreview {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+    margin-top: 2rem;
+}
+.carzgallery .itemBest {
+    display: flex;
+    width: 600px;
+    height: 400px;
+    border-radius: 5px;
+}
+.carzgallery .itemBest img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 5px;
+}
+.carzpreview .item {
+    display: flex;
+    width: 120px;
+    height: 120px;
+}
+.carzpreview .item p {
+    color: white;
+    font-size: 1.2rem;
+    text-align: center;
+}
+.carzpreview .item img {
+    object-fit: cover;
+    border-radius: 50px;
+}
+.carzpreview .item img:hover {
+    transform: translateZ(0.3rem);
+}
+.carzgallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    justify-content: center;
+    padding: 20px;
+    width: 100%;
+    height: 400px;
+}
+.carzpic {
+    display: flex;
+    width: 200px;
+    height: 200px;
+    border-radius: 5px;
+    position: relative;
+}
+.carzpic img {
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+    object-fit: cover;
+}
+
+/* .carzpreview .slider{
+	position: absolute;
+	width: 100px;
+	height: 250px;
+	top: 10%;
+	left: calc(50% -100px);
+	/* transform-style: preserve-3d; */
+/* transform: perspective(1000px);
+	animation: autoRun 20s linear infinite;
+}
+@keyframes autoRun{
+	from{
+		transform: perspective(1000px) rotateX(-20deg) rotateY(0deg);
+	}to{
+		transform: perspective(1000px) rotateX(-20deg) rotateY(360deg);
+	}
+}
+.carzpreview .slider .item{
+	position: absolute;
+	inset: 0 0 0 0;
+	transform:
+			rotateY(calc( (var(--position) - 1) * (360 / var(--quantity)) * 1deg))
+			 translateZ(550px);
+}
+.carzpreview .slider .item img{
+	width:  100%;
+	height: 100%;
+	object-fit: cover;
+} */
+*/
+/* Auction specific styles */
+/*#auctions {
+    padding: 80px 20px 40px;
+    min-height: 100vh;
+}
+
+.auctions-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.auction-item {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.auction-item:hover {
+    transform: translateY(-5px);
+}
+
+.auction-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.car-name {
+    font-size: 1.4rem;
+    color: var(--text-color1);
+    margin-bottom: 10px;
+    font-family: "boxigen";
+}
+
+.car-info {
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.current-bid {
+    font-size: 1.2rem;
+    color: var(--space-p-color);
+    margin-bottom: 15px;
+}
+
+.bid-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+}
+
+.timer {
+    background: rgba(255, 0, 0, 0.3);
+    padding: 8px 15px;
+    border-radius: 20px;
+    text-align: center;
+    margin-bottom: 15px;
+    font-family: "cybergame";
+}
+
+.timer.expiring {
+    background: rgba(255, 0, 0, 0.6);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.bid-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.bid-input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.bid-btn {
+    padding: 10px 20px;
+    background: var(--text-color1);
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.bid-btn:hover {
+    background: var(--secondary-color);
+}
+
+.bid-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+}
+
+.auction-ended {
+    background: rgba(255, 0, 0, 0.3);
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.winning-bid {
+    color: var(--space-p-color);
+    font-weight: bold;
+}*/
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: var(--background-color);
+    margin: 10% auto;
+    padding: 30px;
+    border: 1px solid var(--text-color1);
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    position: absolute;
+    right: 15px;
+    top: 10px;
+}
+
+.close:hover {
+    color: white;
+}
+
+.modal h2 {
+    margin-bottom: 20px;
+    color: var(--text-color1);
+    text-align: center;
+}
+
+.modal input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--text-color1);
+    border-radius: 5px;
+    color: white;
+}
+
+.modal button {
+    width: 100%;
+    padding: 12px;
+    background: var(--text-color1);
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.modal button:hover {
+    background: var(--secondary-color);
+}
+
+.modal p {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.modal a {
+    color: var(--text-color1);
+    text-decoration: none;
+}
+
+.modal a:hover {
+    text-decoration: underline;
+}
+
+/* Footer improvements */
+footer {
+    background: rgba(0, 0, 0, 0.8);
+    padding: 40px 20px 20px;
+    margin-top: 50px;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-content h3 {
+    color: var(--text-color1);
+    margin-bottom: 15px;
+    font-family: "boxigen";
+}
+
+.footer-content ul {
+    list-style: none;
+}
+
+.footer-content ul li {
+    margin-bottom: 8px;
+}
+
+.footer-content a {
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-content a:hover {
+    color: var(--text-color1);
+}
+
+.socials ul {
+    display: flex;
+    gap: 15px;
+}
+
+.socials i {
+    font-size: 1.5rem;
+}
+
+.userEmail input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--text-color1);
+    border-radius: 5px;
+    color: white;
+}
+
+.sub button {
+    width: 100%;
+    padding: 10px;
+    background: var(--text-color1);
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+}
+
+.sub button:hover {
+    background: var(--secondary-color);
+}
+
+.footer-bottom {
+    max-width: 1200px;
+    margin: 30px auto 0;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Login button in header */
+#login-btn a {
+    color: var(--text-color1) !important;
+    font-weight: bold;
+}
+
+.user-status {
+    color: var(--space-p-color);
+    margin-left: 10px;
+    font-size: 0.9rem;
+}
