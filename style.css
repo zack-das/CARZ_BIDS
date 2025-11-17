@@ -40,10 +40,11 @@ nav {
     display: flex;
     justify-content: end;
     width: 100%;
+    padding-right: 60px;
 }
 nav ul {
     display: flex;
-    gap: 12px;
+    gap: 20px;
 }
 nav ul li {
     list-style: none;
@@ -59,6 +60,109 @@ nav ul li a {
 nav ul li a:hover {
     color: rgb(0, 108, 180);
 }
+#menu-icon {
+    color: white;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 2rem;
+    cursor: pointer;
+    display: none;
+}
+#menu-icon:hover {
+    color: rgb(0, 108, 180);
+}
+/*Mobile menu*/
+/* Mobile menu */
+.mobile-menu {
+    display: none; /* Change from flex to none */
+    flex-direction: column;
+    height: 400px;
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2147483647; /* Maximum z-index */
+    background: rgba(0, 1, 12, 0.95);
+    backdrop-filter: blur(16px);
+    padding-top: 60px; /* Space for close button */
+}
+
+.mobile-menu.active {
+    display: flex; /* Show when active class is added */
+}
+
+.mobile-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.mobile-menu ul li {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    font-size: 1.4rem;
+    width: 100%;
+}
+
+.mobile-menu ul li a {
+    color: var(--text-color);
+    text-decoration: none;
+    display: block;
+    width: 100%;
+}
+
+.mobile-menu ul li a:hover {
+    color: rgb(0, 108, 180);
+}
+
+/* Close button styles */
+.mobile-menu #closeMenu {
+    cursor: pointer;
+    display: block; /* Change from none to block */
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    z-index: 1002;
+}
+
+.mobile-menu #closeMenu i {
+    font-size: 2rem;
+    color: white;
+    transition: color 0.3s ease;
+}
+
+.mobile-menu #closeMenu:hover i {
+    color: rgb(0, 108, 180);
+}
+
+/* Menu icon in header */
+#menu-icon {
+    color: white;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 2rem;
+    cursor: pointer;
+    display: none;
+    z-index: 1000;
+}
+
+#menu-icon:hover {
+    color: rgb(0, 108, 180);
+}
+
+/* Show menu icon on mobile */
+@media (max-width: 768px) {
+    #menu-icon {
+        display: block;
+    }
+}
+
 .fin {
     position: absolute;
     width: 10px;
@@ -99,7 +203,7 @@ nav ul li a:hover {
 #home {
     display: flex;
     width: 100%;
-    height: 800px;
+    height: 900px;
     padding: 120px 0 0 0;
     background-image: url(/img/background-image.jpg);
     background-size: cover;
@@ -206,42 +310,45 @@ nav ul li a:hover {
     object-fit: cover;
 }
 
-/* .carzpreview .slider{
-	position: absolute;
-	width: 100px;
-	height: 250px;
-	top: 10%;
-	left: calc(50% -100px);
-	/* transform-style: preserve-3d; */
-/* transform: perspective(1000px);
-	animation: autoRun 20s linear infinite;
+.carzpreview .slider {
+    position: absolute;
+    width: 100px;
+    height: 250px;
+    top: 10%;
+    left: calc(50% -100px);
+    transform-style: preserve-3d;
+    transform: perspective(1000px);
+    animation: autoRun 20s linear infinite;
 }
-@keyframes autoRun{
-	from{
-		transform: perspective(1000px) rotateX(-20deg) rotateY(0deg);
-	}to{
-		transform: perspective(1000px) rotateX(-20deg) rotateY(360deg);
-	}
+@keyframes autoRun {
+    from {
+        transform: perspective(1000px) rotateX(-20deg) rotateY(0deg);
+    }
+    to {
+        transform: perspective(1000px) rotateX(-20deg) rotateY(360deg);
+    }
 }
-.carzpreview .slider .item{
-	position: absolute;
-	inset: 0 0 0 0;
-	transform:
-			rotateY(calc( (var(--position) - 1) * (360 / var(--quantity)) * 1deg))
-			 translateZ(550px);
+.carzpreview .slider .item {
+    position: absolute;
+    inset: 0 0 0 0;
+    transform: rotateY(
+            calc((var(--position) - 1) * (360 / var(--quantity)) * 1deg)
+        )
+        translateZ(550px);
 }
-.carzpreview .slider .item img{
-	width:  100%;
-	height: 100%;
-	object-fit: cover;
-} */
-*/
+.carzpreview .slider .item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 /* Auction specific styles */
-/*#auctions {
+#auctions {
     padding: 80px 20px 40px;
     min-height: 100vh;
 }
-
+#auctions h1 {
+    font-family: "Alien";
+}
 .auctions-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -302,7 +409,7 @@ nav ul li a:hover {
     border-radius: 20px;
     text-align: center;
     margin-bottom: 15px;
-    font-family: "cybergame";
+    font-family: "roboto";
 }
 
 .timer.expiring {
@@ -334,7 +441,7 @@ nav ul li a:hover {
     border: none;
     border-radius: 5px;
     background: rgba(255, 255, 255, 0.1);
-    color: white;
+    color: black;
 }
 
 .bid-btn {
@@ -367,7 +474,7 @@ nav ul li a:hover {
 .winning-bid {
     color: var(--space-p-color);
     font-weight: bold;
-}*/
+}
 
 /* Modal styles */
 .modal {
@@ -545,4 +652,291 @@ footer {
     color: var(--space-p-color);
     margin-left: 10px;
     font-size: 0.9rem;
+}
+
+/* Car Detail Modal Styles */
+.car-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    backdrop-filter: blur(10px);
+}
+
+.car-modal-content {
+    position: relative;
+    background: var(--background-color);
+    margin: 2% auto;
+    padding: 30px;
+    width: 95%;
+    max-width: 1200px;
+    max-height: 90vh;
+    border-radius: 15px;
+    border: 2px solid var(--text-color1);
+    box-shadow: 0 20px 50px rgba(0, 153, 255, 0.3);
+    overflow-y: auto;
+    animation: modalSlideIn 0.4s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.close-car-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 35px;
+    cursor: pointer;
+    color: var(--text-color1);
+    z-index: 10;
+    transition: color 0.3s ease;
+}
+
+.close-car-modal:hover {
+    color: var(--space-p-color);
+}
+
+/* Car Details Layout */
+.car-details-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-top: 20px;
+}
+
+/* Media Gallery */
+.media-gallery {
+    position: relative;
+}
+
+.main-media {
+    width: 100%;
+    height: 400px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    border: 2px solid var(--text-color1);
+}
+
+.main-media img,
+.main-media video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.media-thumbnails {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+.thumbnail {
+    width: 100%;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.thumbnail:hover {
+    opacity: 1;
+    transform: scale(1.05);
+    border-color: var(--text-color1);
+}
+
+.thumbnail.active {
+    opacity: 1;
+    border: 2px solid var(--space-p-color);
+    transform: scale(1.05);
+}
+
+.thumbnail img,
+.thumbnail video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Car Info */
+.car-info-details {
+    padding: 20px;
+}
+
+.car-title-modal {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    color: var(--text-color1);
+    font-family: "Alien";
+}
+
+.car-price-modal {
+    font-size: 1.8em;
+    color: var(--space-p-color);
+    margin-bottom: 25px;
+    font-weight: bold;
+}
+
+.car-description-modal {
+    margin-bottom: 25px;
+    line-height: 1.6;
+    font-size: 1.1em;
+}
+
+.car-specs {
+    margin-bottom: 30px;
+}
+
+.spec-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.spec-label {
+    color: var(--text-color);
+    font-family: "boxigen";
+}
+
+.spec-value {
+    color: var(--text-color1);
+    font-weight: bold;
+}
+
+/* Bid Section in Modal */
+.bid-section-modal {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 25px;
+    border-radius: 10px;
+    border: 1px solid var(--text-color1);
+    margin-top: 25px;
+}
+
+.bid-info-modal {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+}
+
+.bid-form-modal {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.bid-input-modal {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid var(--text-color1);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 1.1em;
+}
+
+.bid-btn-modal {
+    padding: 12px 25px;
+    background: var(--text-color1);
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    font-size: 1.1em;
+    font-family: "boxigen";
+}
+
+.bid-btn-modal:hover {
+    background: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+/* Timer in Modal */
+.timer-modal {
+    background: rgba(255, 0, 0, 0.3);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 1.2em;
+    font-family: "boxigen";
+}
+
+.timer-modal.expiring {
+    background: rgba(255, 0, 0, 0.6);
+    animation: pulse 1s infinite;
+}
+
+/* Video indicator */
+.video-indicator {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 153, 255, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8em;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+    .car-details-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .car-modal-content {
+        width: 98%;
+        margin: 1% auto;
+        padding: 20px;
+    }
+
+    .car-title-modal {
+        font-size: 2em;
+    }
+
+    .main-media {
+        height: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .media-thumbnails {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .bid-form-modal {
+        flex-direction: column;
+    }
+
+    .bid-input-modal {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    #menu-icon {
+        display: flex;
+    }
+    .desktop-menu {
+        display: none;
+    }
 }
