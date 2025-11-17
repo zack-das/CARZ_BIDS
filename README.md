@@ -45,3 +45,5 @@ Home – View active and upcoming auctions.
 Auctions – Track your active and past bids.
 
 Contact us
+
+before running the app initialize the database
