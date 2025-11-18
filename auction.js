@@ -113,13 +113,11 @@ class CarAuction {
             src: "/img/imgi_265_18015-MC20BluInfinito-scaled-e1707920217641.jpg",
             alt: "Pagani Huayra Side",
           },
-                {
-      type: "iframe",
-      src: "https://www.youtube.com/embed/1rYKERKZOgc",
-      alt: "Ferrari California T Review"
-    }
-
-,
+          {
+            type: "iframe",
+            src: "https://www.youtube.com/embed/1rYKERKZOgc",
+            alt: "Pagani Huayra Interior",
+          },
         ],
         specs: {
           engine: "6.0L V12",
@@ -464,27 +462,26 @@ class CarAuction {
   }
 
   createGalleryThumbnails(auction) {
-  if (!auction.gallery || auction.gallery.length === 0) {
-    return `<div class="thumbnail active" onclick="carAuction.changeMainMedia('${auction.image}', 'image', this)">
-                <img src="${auction.image}" alt="${auction.name}">
-            </div>`;
+    if (!auction.gallery || auction.gallery.length === 0) {
+      return `<div class="thumbnail active" onclick="carAuction.changeMainMedia('${auction.image}', 'image', this)">
+                  <img src="${auction.image}" alt="${auction.name}">
+              </div>`;
+    }
+
+    let thumbnails = "";
+    auction.gallery.forEach((media, index) => {
+      const isActive = index === 0 ? "active" : "";
+
+      thumbnails += `
+        <div class="thumbnail ${isActive}" onclick="carAuction.changeMainMedia('${media.src}', '${media.type}', this)">
+            ${media.type === "iframe" ? '<div class="video-indicator">VIDEO</div>' : ""}
+            <img src="${media.type === "iframe" ? auction.image : media.src}" alt="${media.alt}">
+        </div>
+      `;
+    });
+
+    return thumbnails;
   }
-
-  let thumbnails = "";
-  auction.gallery.forEach((media, index) => {
-    const isActive = index === 0 ? "active" : "";
-
-    thumbnails += `
-      <div class="thumbnail ${isActive}" onclick="carAuction.changeMainMedia('${media.src}', '${media.type}', this)">
-          ${media.type === "iframe" ? '<div class="video-indicator">VIDEO</div>' : ""}
-          <img src="${media.type === "iframe" ? auction.image : media.src}" alt="${media.alt}">
-      </div>
-    `;
-  });
-
-  return thumbnails;
-}
-
 
   createSpecsList(specs) {
     const specEntries = Object.entries(specs);
@@ -546,38 +543,39 @@ class CarAuction {
         `;
   }
 
-changeMainMedia(src, type, thumbElement) {
-  const mainMedia = document.getElementById("main-media");
-  if (!mainMedia) return;
+  changeMainMedia(src, type, thumbElement) {
+    const mainMedia = document.getElementById("main-media");
+    if (!mainMedia) return;
 
-  if (type === "iframe") {
-    mainMedia.innerHTML = `
-      <iframe
-        src="${src}"
-        frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen
-        style="width: 100%; height: 100%; border-radius: 10px;">
-      </iframe>
-    `;
-  } else if (type === "video") {
-    mainMedia.innerHTML = `
-      <video controls autoplay style="width: 100%; height: 100%; object-fit: cover;">
-        <source src="${src}" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
-    `;
-  } else {
-    mainMedia.innerHTML = `
-      <img src="${src}" id="main-media-display" style="width: 100%; height: 100%; object-fit: cover;">
-    `;
+    if (type === "iframe") {
+      mainMedia.innerHTML = `
+        <iframe
+          src="${src}"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          style="width: 100%; height: 100%; border-radius: 10px;">
+        </iframe>
+      `;
+    } else if (type === "video") {
+      mainMedia.innerHTML = `
+        <video controls autoplay style="width: 100%; height: 100%; object-fit: cover;">
+          <source src="${src}" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      `;
+    } else {
+      mainMedia.innerHTML = `
+        <img src="${src}" id="main-media-display" style="width: 100%; height: 100%; object-fit: cover;">
+      `;
+    }
+
+    // Update active thumbnail
+    document
+      .querySelectorAll(".thumbnail")
+      .forEach((t) => t.classList.remove("active"));
+    if (thumbElement) thumbElement.classList.add("active");
   }
-
-  // Update active thumbnail
-  document.querySelectorAll(".thumbnail").forEach((t) => t.classList.remove("active"));
-  if (thumbElement) thumbElement.classList.add("active");
-}
-
 
   placeBidFromModal(auctionId) {
     const bidInput = document.getElementById(`modal-bid-input-${auctionId}`);
@@ -708,7 +706,7 @@ changeMainMedia(src, type, thumbElement) {
   checkLoginStatus() {
     const loginBtn = document.getElementById("login-btn");
     if (this.currentUser) {
-      loginBtn.innerHTML = `<a href="#" onclick="carAuction.logout()">Logout</a>`;
+      loginBtn.innerHTML = `<a href="#" onclick="carAuction.logout()">Logout </a>`;
     } else {
       loginBtn.innerHTML = '<a href="#" onclick="toggleLogin()">Login</a>';
     }
