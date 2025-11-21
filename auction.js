@@ -1,15 +1,12 @@
-// Wait for page to load
 document.addEventListener("DOMContentLoaded", function () {
   const mobileMenu = document.getElementById("mobile-menu");
   const menuIcon = document.getElementById("menu-icon");
   const closeMenu = document.getElementById("closeMenu");
 
-  // Toggle menu function
   function toggleMobileMenu() {
     mobileMenu.classList.toggle("active");
   }
 
-  // Open menu when clicking hamburger icon
   if (menuIcon) {
     menuIcon.addEventListener("click", function (event) {
       event.stopPropagation();
@@ -17,14 +14,12 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Close menu when clicking X button
   if (closeMenu) {
     closeMenu.addEventListener("click", function () {
       mobileMenu.classList.remove("active");
     });
   }
 
-  // Close menu when clicking outside
   document.addEventListener("click", function (event) {
     if (mobileMenu.classList.contains("active")) {
       if (
@@ -36,7 +31,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Close menu when clicking on links
   const menuLinks = mobileMenu.querySelectorAll("a");
   menuLinks.forEach((link) => {
     link.addEventListener("click", function () {
@@ -44,7 +38,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
-  // Close menu with Escape key
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && mobileMenu.classList.contains("active")) {
       mobileMenu.classList.remove("active");
@@ -52,12 +45,11 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-// Auction functionality
 class CarAuction {
   constructor() {
     this.currentUser = null;
     this.auctions = [];
-    this.API_BASE = "http://localhost:3001/api"; // Backend API base URL
+    this.API_BASE = "http://localhost:3001/api";
     this.init();
   }
 
@@ -70,33 +62,29 @@ class CarAuction {
   async loadAuctions() {
     try {
       const response = await fetch(`${this.API_BASE}/auctions`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch auctions");
+      if (response.ok) {
+        const dbAuctions = await response.json();
+        this.auctions = [
+          ...transformedDbAuctions,
+          ...this.getOriginalSampleAuctions()
+        ];
+      } else {
+        this.auctions = this.getOriginalSampleAuctions();
       }
-      const auctions = await response.json();
-      this.auctions = auctions.map((auction) => ({
-        ...auction,
-        endTime: new Date(auction.end_time),
-        bids: [], // Initialize empty bids array
-      }));
-      this.renderAuctions();
-      this.startTimers();
     } catch (error) {
-      console.error("Failed to load auctions:", error);
-      // Fallback to sample data if server is not available
-      this.loadSampleAuctions();
+      this.auctions = this.getOriginalSampleAuctions();
     }
+
+    this.renderAuctions();
   }
 
-  loadSampleAuctions() {
-    // Sample auction data with gallery and specs
-    this.auctions = [
+  getOriginalSampleAuctions() {
+    return [
       {
         id: 1,
         name: "Pagani Huayra",
         image: "/img/imgi_265_18015-MC20BluInfinito-scaled-e1707920217641.jpg",
-        description:
-          "Mid-engine sports car produced by Italian automaker Pagani",
+        description: "Mid-engine sports car produced by Italian automaker Pagani",
         startingBid: 2500000,
         currentBid: 2650000,
         bidderCount: 8,
@@ -211,26 +199,24 @@ class CarAuction {
           topSpeed: "155 mph",
           transmission: "8-speed automatic",
         },
-      },
+      }
     ];
-
-    this.renderAuctions();
-    this.startTimers();
   }
 
   renderAuctions() {
-    const container = document.getElementById("auctions-container");
+    const container = document.getElementById('auctions-container');
+
     if (!container) {
-      console.error("auctions-container not found!");
       return;
     }
 
-    container.innerHTML = "";
-
-    this.auctions.forEach((auction) => {
+    container.innerHTML = '';
+    this.auctions.forEach(auction => {
       const auctionElement = this.createAuctionElement(auction);
       container.appendChild(auctionElement);
     });
+
+    this.startTimers();
   }
 
   createAuctionElement(auction) {
@@ -243,10 +229,10 @@ class CarAuction {
             <img src="${auction.image}" alt="${auction.name}" class="auction-image">
             <h3 class="car-name">${auction.name}</h3>
             <p class="car-info">${auction.description}</p>
-            <div class="current-bid">Current Bid: $${auction.currentBid.toLocaleString()}</div>
+            <div class="current-bid">Current Bid: KSH ${auction.currentBid.toLocaleString()}</div>
             <div class="bid-info">
                 <span>Bidders: ${auction.bidderCount}</span>
-                <span>Starting: $${auction.startingBid.toLocaleString()}</span>
+                <span>Starting: KSH ${auction.startingBid.toLocaleString()}</span>
             </div>
             <div class="timer" id="timer-${auction.id}">
                 ${this.formatTimeRemaining(auction.endTime)}
@@ -268,7 +254,7 @@ class CarAuction {
                     Auction Ended
                     ${
                       auction.bids.length > 0
-                        ? `<div class="winning-bid">Winning Bid: $${Math.max(...auction.bids.map((b) => b.amount)).toLocaleString()}</div>`
+                        ? `<div class="winning-bid">Winning Bid: KSH ${Math.max(...auction.bids.map((b) => b.amount)).toLocaleString()}</div>`
                         : "<div>No bids placed</div>"
                     }
                 </div>
@@ -283,7 +269,7 @@ class CarAuction {
             <div class="bid-form">
                 <input type="number"
                        class="bid-input"
-                       placeholder="Enter your bid (min: $${(auction.currentBid + 1000).toLocaleString()})"
+                       placeholder="Enter your bid (min: KSH ${(auction.currentBid + 1000).toLocaleString()})"
                        min="${auction.currentBid + 1000}"
                        step="1000">
                 <button class="bid-btn" onclick="event.stopPropagation(); carAuction.placeBid(${auction.id})"
@@ -369,10 +355,8 @@ class CarAuction {
       const result = await response.json();
 
       if (result.success) {
-        // Reload auctions to get updated data
         await this.loadAuctions();
 
-        // Update modal if open
         if (document.getElementById("car-modal")?.style.display === "block") {
           this.openCarModal(auctionId);
         }
@@ -382,8 +366,6 @@ class CarAuction {
         alert("Bid failed: " + result.error);
       }
     } catch (error) {
-      console.error("Bid error:", error);
-      // Fallback to frontend-only bid placement
       auction.bids.push({
         userId: this.currentUser.id,
         userName: this.currentUser.name,
@@ -404,7 +386,6 @@ class CarAuction {
     }
   }
 
-  // Modal functionality
   openCarModal(auctionId) {
     const auction = this.auctions.find((a) => a.id === auctionId);
     if (!auction) return;
@@ -413,7 +394,6 @@ class CarAuction {
     const container = document.getElementById("car-details-container");
 
     if (!modal || !container) {
-      console.error("Modal elements not found!");
       return;
     }
 
@@ -440,7 +420,7 @@ class CarAuction {
 
             <div class="car-info-details">
                 <h2 class="car-title-modal">${auction.name}</h2>
-                <div class="car-price-modal">Current Bid: $${auction.currentBid.toLocaleString()}</div>
+                <div class="car-price-modal">Current Bid: KSH ${auction.currentBid.toLocaleString()}</div>
                 <p class="car-description-modal">${auction.description}</p>
 
                 <div class="car-specs">
@@ -515,7 +495,7 @@ class CarAuction {
     return `
             <div class="bid-section-modal">
                 <div class="bid-info-modal">
-                    <span>Starting Bid: $${auction.startingBid.toLocaleString()}</span>
+                    <span>Starting Bid: KSH ${auction.startingBid.toLocaleString()}</span>
                     <span>Bidders: ${auction.bidderCount}</span>
                 </div>
                 ${
@@ -524,7 +504,7 @@ class CarAuction {
                     <div class="bid-form-modal">
                         <input type="number"
                                class="bid-input-modal"
-                               placeholder="Enter bid (min: $${(auction.currentBid + 1000).toLocaleString()})"
+                               placeholder="Enter bid (min: KSH ${(auction.currentBid + 1000).toLocaleString()})"
                                min="${auction.currentBid + 1000}"
                                step="1000"
                                id="modal-bid-input-${auction.id}">
@@ -570,7 +550,6 @@ class CarAuction {
       `;
     }
 
-    // Update active thumbnail
     document
       .querySelectorAll(".thumbnail")
       .forEach((t) => t.classList.remove("active"));
@@ -586,17 +565,21 @@ class CarAuction {
   }
 
   setupEventListeners() {
-    // Login form
-    document.getElementById("login-form").addEventListener("submit", (e) => {
-      e.preventDefault();
-      this.handleLogin();
-    });
+    const loginForm = document.getElementById("login-form");
+    if (loginForm) {
+      loginForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        this.handleLogin();
+      });
+    }
 
-    // Register form
-    document.getElementById("register-form").addEventListener("submit", (e) => {
-      e.preventDefault();
-      this.handleRegister();
-    });
+    const registerForm = document.getElementById("register-form");
+    if (registerForm) {
+      registerForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        this.handleRegister();
+      });
+    }
   }
 
   async handleLogin() {
@@ -625,8 +608,6 @@ class CarAuction {
         alert("Login failed: " + result.error);
       }
     } catch (error) {
-      console.error("Login error:", error);
-      // Fallback to frontend-only login
       if (email && password) {
         this.currentUser = {
           id: Math.random().toString(36).substr(2, 9),
@@ -662,7 +643,6 @@ class CarAuction {
       const result = await response.json();
 
       if (result.success) {
-        // Auto-login after successful registration
         const loginResponse = await fetch(`${this.API_BASE}/login`, {
           method: "POST",
           headers: {
@@ -684,8 +664,6 @@ class CarAuction {
         alert("Registration failed: " + result.error);
       }
     } catch (error) {
-      console.error("Registration error:", error);
-      // Fallback to frontend-only registration
       if (name && email && password) {
         this.currentUser = {
           id: Math.random().toString(36).substr(2, 9),
@@ -720,7 +698,6 @@ class CarAuction {
   }
 }
 
-// Modal functions
 function toggleLogin() {
   const modal = document.getElementById("login-modal");
   modal.style.display = modal.style.display === "block" ? "none" : "block";
@@ -741,7 +718,6 @@ function closeCarModal() {
   document.body.style.overflow = "auto";
 }
 
-// Close modals when clicking outside
 window.onclick = function (event) {
   const modals = document.getElementsByClassName("modal");
   for (let modal of modals) {
@@ -756,7 +732,6 @@ window.onclick = function (event) {
   }
 };
 
-// Close modal with Escape key
 document.addEventListener("keydown", function (event) {
   if (event.key === "Escape") {
     closeCarModal();
@@ -765,5 +740,4 @@ document.addEventListener("keydown", function (event) {
   }
 });
 
-// Initialize the auction system
 const carAuction = new CarAuction();
