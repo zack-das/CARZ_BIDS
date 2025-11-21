@@ -1,12 +1,15 @@
+// Wait for page to load
 document.addEventListener("DOMContentLoaded", function () {
   const mobileMenu = document.getElementById("mobile-menu");
   const menuIcon = document.getElementById("menu-icon");
   const closeMenu = document.getElementById("closeMenu");
 
+  // Toggle menu function
   function toggleMobileMenu() {
     mobileMenu.classList.toggle("active");
   }
 
+  // Open menu when clicking hamburger icon
   if (menuIcon) {
     menuIcon.addEventListener("click", function (event) {
       event.stopPropagation();
@@ -14,12 +17,14 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Close menu when clicking X button
   if (closeMenu) {
     closeMenu.addEventListener("click", function () {
       mobileMenu.classList.remove("active");
     });
   }
 
+  // Close menu when clicking outside
   document.addEventListener("click", function (event) {
     if (mobileMenu.classList.contains("active")) {
       if (
@@ -31,6 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  // Close menu when clicking on links
   const menuLinks = mobileMenu.querySelectorAll("a");
   menuLinks.forEach((link) => {
     link.addEventListener("click", function () {
@@ -38,6 +44,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  // Close menu with
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && mobileMenu.classList.contains("active")) {
       mobileMenu.classList.remove("active");
@@ -45,17 +52,23 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+// Auction functionality
 class CarAuction {
   constructor() {
     this.currentUser = null;
     this.auctions = [];
+    this.filteredAuctions = [];
     this.API_BASE = "http://localhost:3001/api";
+    this.searchTerm = '';
+    this.priceFilter = '';
+    this.timeFilter = '';
     this.init();
   }
 
   async init() {
     await this.loadAuctions();
     this.setupEventListeners();
+    this.setupSearchFunctionality();
     this.checkLoginStatus();
   }
 
@@ -64,19 +77,25 @@ class CarAuction {
       const response = await fetch(`${this.API_BASE}/auctions`);
       if (response.ok) {
         const dbAuctions = await response.json();
+
+
         this.auctions = [
           ...transformedDbAuctions,
           ...this.getOriginalSampleAuctions()
         ];
       } else {
+        // If no database, use only original sample auctions
         this.auctions = this.getOriginalSampleAuctions();
       }
     } catch (error) {
+      console.error("Failed to load auctions from database:", error);
+      // Use only original sample auctions if database fails
       this.auctions = this.getOriginalSampleAuctions();
     }
 
-    this.renderAuctions();
+    this.filterAuctions();
   }
+
 
   getOriginalSampleAuctions() {
     return [
@@ -203,15 +222,117 @@ class CarAuction {
     ];
   }
 
-  renderAuctions() {
+
+  generateSampleSpecs(carName) {
+    const specs = {
+      "Toyota Camry 2022": {
+        engine: "2.5L 4-cylinder",
+        horsepower: "203 hp",
+        torque: "184 lb-ft",
+        acceleration: "7.9s 0-60 mph",
+        topSpeed: "135 mph",
+        transmission: "8-speed automatic",
+        fuelEconomy: "32 mpg combined"
+      },
+      "Ford Mustang GT": {
+        engine: "5.0L V8",
+        horsepower: "450 hp",
+        torque: "410 lb-ft",
+        acceleration: "4.3s 0-60 mph",
+        topSpeed: "155 mph",
+        transmission: "10-speed automatic",
+        fuelEconomy: "19 mpg combined"
+      },
+      "Honda Civic 2021": {
+        engine: "2.0L 4-cylinder",
+        horsepower: "158 hp",
+        torque: "138 lb-ft",
+        acceleration: "7.5s 0-60 mph",
+        topSpeed: "130 mph",
+        transmission: "CVT automatic",
+        fuelEconomy: "35 mpg combined"
+      }
+    };
+
+    return specs[carName] || {
+      engine: "Not specified",
+      horsepower: "Not specified",
+      transmission: "Not specified"
+    };
+  }
+
+
+
+  filterAuctions() {
+    let filtered = [...this.auctions];
+
+
+
+    // Apply price filter
+    if (this.priceFilter) {
+      filtered = filtered.filter(auction => {
+        const currentBid = auction.currentBid;
+
+        switch (this.priceFilter) {
+          case '0-50000':
+            return currentBid <= 50000;
+          case '50000-100000':
+            return currentBid > 50000 && currentBid <= 100000;
+          case '100000-500000':
+            return currentBid > 100000 && currentBid <= 500000;
+          case '500000+':
+            return currentBid > 500000;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply time filter
+    if (this.timeFilter) {
+      const now = new Date();
+      filtered = filtered.filter(auction => {
+        const timeRemaining = auction.endTime - now;
+
+        switch (this.timeFilter) {
+          case 'ending-soon':
+            return timeRemaining <= 24 * 60 * 60 * 1000; // 24 hours
+          case 'ending-week':
+            return timeRemaining <= 7 * 24 * 60 * 60 * 1000; // 7 days
+          default:
+            return true;
+        }
+      });
+    }
+
+    this.filteredAuctions = filtered;
+    this.renderFilteredAuctions();
+    this.updateResultsInfo();
+  }
+
+  renderFilteredAuctions() {
     const container = document.getElementById('auctions-container');
 
     if (!container) {
+      console.error('auctions-container not found!');
+      return;
+    }
+
+    if (this.filteredAuctions.length === 0) {
+      container.innerHTML = `
+        <div class="no-results">
+          <h3>No cars found matching your search</h3>
+          <p>Try adjusting your search terms or filters</p>
+          <button onclick="carAuction.clearFilters()" class="bid-btn" style="margin-top: 10px;">
+            Clear All Filters
+          </button>
+        </div>
+      `;
       return;
     }
 
     container.innerHTML = '';
-    this.auctions.forEach(auction => {
+    this.filteredAuctions.forEach(auction => {
       const auctionElement = this.createAuctionElement(auction);
       container.appendChild(auctionElement);
     });
@@ -219,16 +340,25 @@ class CarAuction {
     this.startTimers();
   }
 
+
+
+
+
   createAuctionElement(auction) {
     const div = document.createElement("div");
     div.className = "auction-item";
     div.style.cursor = "pointer";
     div.onclick = () => this.openCarModal(auction.id);
 
+    // Highlight search terms in name and description
+    let displayName = auction.name;
+    let displayDescription = auction.description;
+
+
     div.innerHTML = `
             <img src="${auction.image}" alt="${auction.name}" class="auction-image">
-            <h3 class="car-name">${auction.name}</h3>
-            <p class="car-info">${auction.description}</p>
+            <h3 class="car-name">${displayName}</h3>
+            <p class="car-info">${displayDescription}</p>
             <div class="current-bid">Current Bid: KSH ${auction.currentBid.toLocaleString()}</div>
             <div class="bid-info">
                 <span>Bidders: ${auction.bidderCount}</span>
@@ -315,6 +445,7 @@ class CarAuction {
   }
 
   async placeBid(auctionId, bidAmount = null) {
+
     if (!this.currentUser) {
       alert("Please login to place a bid");
       toggleLogin();
@@ -355,8 +486,10 @@ class CarAuction {
       const result = await response.json();
 
       if (result.success) {
+        // Reload auctions to get updated data
         await this.loadAuctions();
 
+        // Update modal if open
         if (document.getElementById("car-modal")?.style.display === "block") {
           this.openCarModal(auctionId);
         }
@@ -366,6 +499,8 @@ class CarAuction {
         alert("Bid failed: " + result.error);
       }
     } catch (error) {
+      console.error("Bid error:", error);
+      // Fallback to frontend-only bid placement
       auction.bids.push({
         userId: this.currentUser.id,
         userName: this.currentUser.name,
@@ -376,7 +511,7 @@ class CarAuction {
       auction.currentBid = bidAmount;
       auction.bidderCount = new Set(auction.bids.map((b) => b.userId)).size;
 
-      this.renderAuctions();
+      this.filterAuctions();
 
       if (document.getElementById("car-modal")?.style.display === "block") {
         this.openCarModal(auctionId);
@@ -386,6 +521,7 @@ class CarAuction {
     }
   }
 
+  // Modal functionality
   openCarModal(auctionId) {
     const auction = this.auctions.find((a) => a.id === auctionId);
     if (!auction) return;
@@ -394,6 +530,7 @@ class CarAuction {
     const container = document.getElementById("car-details-container");
 
     if (!modal || !container) {
+      console.error("Modal elements not found!");
       return;
     }
 
@@ -504,7 +641,7 @@ class CarAuction {
                     <div class="bid-form-modal">
                         <input type="number"
                                class="bid-input-modal"
-                               placeholder="Enter bid (min: KSH ${(auction.currentBid + 1000).toLocaleString()})"
+                               placeholder="Enter bid (min: Ksh${(auction.currentBid + 1000).toLocaleString()})"
                                min="${auction.currentBid + 1000}"
                                step="1000"
                                id="modal-bid-input-${auction.id}">
@@ -550,6 +687,7 @@ class CarAuction {
       `;
     }
 
+    // Update active thumbnail
     document
       .querySelectorAll(".thumbnail")
       .forEach((t) => t.classList.remove("active"));
@@ -565,6 +703,7 @@ class CarAuction {
   }
 
   setupEventListeners() {
+    // Login form
     const loginForm = document.getElementById("login-form");
     if (loginForm) {
       loginForm.addEventListener("submit", (e) => {
@@ -573,6 +712,7 @@ class CarAuction {
       });
     }
 
+    // Register form
     const registerForm = document.getElementById("register-form");
     if (registerForm) {
       registerForm.addEventListener("submit", (e) => {
@@ -583,6 +723,7 @@ class CarAuction {
   }
 
   async handleLogin() {
+
     const form = document.getElementById("login-form");
     const email = form.querySelector('input[type="email"]').value;
     const password = form.querySelector('input[type="password"]').value;
@@ -608,6 +749,8 @@ class CarAuction {
         alert("Login failed: " + result.error);
       }
     } catch (error) {
+      console.error("Login error:", error);
+      // Fallback to frontend-only login
       if (email && password) {
         this.currentUser = {
           id: Math.random().toString(36).substr(2, 9),
@@ -617,7 +760,7 @@ class CarAuction {
 
         toggleLogin();
         this.checkLoginStatus();
-        this.renderAuctions();
+        this.filterAuctions();
         alert("Login successful!");
       } else {
         alert("Please enter both email and password");
@@ -626,6 +769,7 @@ class CarAuction {
   }
 
   async handleRegister() {
+
     const form = document.getElementById("register-form");
     const name = form.querySelector('input[type="text"]').value;
     const email = form.querySelector('input[type="email"]').value;
@@ -643,6 +787,7 @@ class CarAuction {
       const result = await response.json();
 
       if (result.success) {
+        // Auto-login after successful registration
         const loginResponse = await fetch(`${this.API_BASE}/login`, {
           method: "POST",
           headers: {
@@ -664,6 +809,8 @@ class CarAuction {
         alert("Registration failed: " + result.error);
       }
     } catch (error) {
+      console.error("Registration error:", error);
+      // Fallback to frontend-only registration
       if (name && email && password) {
         this.currentUser = {
           id: Math.random().toString(36).substr(2, 9),
@@ -673,7 +820,7 @@ class CarAuction {
 
         toggleRegister();
         this.checkLoginStatus();
-        this.renderAuctions();
+        this.filterAuctions();
         alert("Registration successful! You are now logged in.");
       } else {
         alert("Please fill all fields");
@@ -693,11 +840,12 @@ class CarAuction {
   logout() {
     this.currentUser = null;
     this.checkLoginStatus();
-    this.renderAuctions();
+    this.filterAuctions();
     alert("Logged out successfully");
   }
 }
 
+//Login
 function toggleLogin() {
   const modal = document.getElementById("login-modal");
   modal.style.display = modal.style.display === "block" ? "none" : "block";
@@ -718,6 +866,7 @@ function closeCarModal() {
   document.body.style.overflow = "auto";
 }
 
+// Close modals when clicking outside
 window.onclick = function (event) {
   const modals = document.getElementsByClassName("modal");
   for (let modal of modals) {
@@ -732,6 +881,7 @@ window.onclick = function (event) {
   }
 };
 
+// Close modal with Escape key
 document.addEventListener("keydown", function (event) {
   if (event.key === "Escape") {
     closeCarModal();
@@ -740,4 +890,7 @@ document.addEventListener("keydown", function (event) {
   }
 });
 
+
+
+// Initialize the auction system
 const carAuction = new CarAuction();
