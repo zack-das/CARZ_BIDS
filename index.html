@@ -12,6 +12,9 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     </head>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+
     <body>
         <header>
             <div class="fin"></div>
@@ -146,22 +149,36 @@
                 <div class="newsletter">
                     <h3>Newsletter</h3>
                     <div class="userEmail">
-                        <input
-                            id="email"
-                            type="email"
-                            placeholder="Enter your email"
-                        />
+                     <input id="email" type="email" placeholder="Enter your email" />
                     </div>
                     <div class="sub">
-                        <button>Subscribe</button>
+                        <button onclick="subscribe()">Subscribe</button>
                     </div>
                 </div>
+
             </div>
             <div class="footer-bottom">
                 <p>T&Cs</p>
                 <p>copyright 2025 XDEVS</p>
             </div>
         </footer>
+        <script>
+            function subscribe() {
+                const email = document.getElementById("email").value;
+
+            if (!email) {
+            alert("Please enter your email");
+            return;
+             }
+
+                emailjs.send("service_1q826dn", "template_ozin8cd", {
+                   subscriber_email: email
+             }).then(
+                  () => alert("Subscription sent!"),
+                   (err) => alert("Failed to send: " + JSON.stringify(err))
+             );
+            }
+        </script>
 
         <script src="./auction.js"></script>
     </body>
