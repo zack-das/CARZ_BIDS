@@ -1,33 +1,59 @@
 <!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Carz.com</title>
+        <link rel="stylesheet" href="./style.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+        />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Carz.com</title>
-    <link rel="stylesheet" href="./style.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
-</head>
+    </head>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+   (function(){
+      emailjs.init({
+        publicKey: "_7ZxiSmy7xznzyi6y",
+      });
+   })();
+</script>
 
-<body>
-    <header>
-        <div class="fin"></div>
-        <div class="fin2"></div>
-        <div class="lheade">
-            <nav>
-                <ul class="desktop-menu">
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#auctions">Auctions</a></li>
-                    <li><a href="#contact">Contact us</a></li>
-                    <li id="login-btn">
-                        <a href="#" onclick="toggleLogin()">Login</a>
-                    </li>
-                </ul>
-                <div id="menu-icon"><i class="fas fa-bars"></i></div>
-            </nav>
+    <body>
+        <header>
+            <div class="fin"></div>
+            <div class="fin2"></div>
+            <div class="lheade">
+                <nav>
+                    <ul class="desktop-menu">
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#auctions">Auctions</a></li>
+                        <li><a href="#contact">Contact us</a></li>
+                        <li id="login-btn">
+                            <a href="#" onclick="toggleLogin()">Login</a>
+                        </li>
+                    </ul>
+                    <div id="menu-icon"><i class="fas fa-bars"></i></div>
+                </nav>
+            </div>
+        </header>
+
+        <!--Mobile Menu-->
+        <div id="mobile-menu" class="mobile-menu">
+            <div id="closeMenu"><i class="fas fa-times"></i></div>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#auctions">Auctions</a></li>
+                <li><a href="#contact">Contact us</a></li>
+                <li id="login-btn">
+                    <a href="#" onclick="toggleLogin()">Login</a>
+                </li>
+            </ul>
         </div>
-    </header>
 
+<<<<<<< HEAD
     <!--Mobile Menu-->
     <div id="mobile-menu" class="mobile-menu">
         <div id="closeMenu"><i class="fas fa-times"></i></div>
@@ -90,77 +116,138 @@
             </div>
             <div class="auctions-container" id="auctions-container">
                 <!-- Auction items will be dynamically loaded here -->
+=======
+        <!-- Login Modal -->
+        <div id="login-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="toggleLogin()">&times;</span>
+                <h2>Login to Bid</h2>
+                <form id="login-form">
+                    <input type="email" placeholder="Email" required />
+                    <input type="password" placeholder="Password" required />
+                    <button type="submit">Login</button>
+                </form>
+                <p>
+                    Don't have an account?
+                    <a href="#" onclick="toggleRegister()">Register</a>
+                </p>
+>>>>>>> 71450a705db39c11ba0bc4f27b4addea923612da
             </div>
         </div>
-    </section>
 
-    <!-- Car Detail Modal -->
-    <div id="car-modal" class="car-modal">
-        <div class="car-modal-content">
-            <span class="close-car-modal" onclick="closeCarModal()">&times;</span>
-            <div class="car-details-container" id="car-details-container">
-                <!-- Car details will be dynamically loaded here -->
+        <!-- Register Modal -->
+        <div id="register-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="toggleRegister()">&times;</span>
+                <h2>Create Account</h2>
+                <form id="register-form">
+                    <input type="text" placeholder="Full Name" required />
+                    <input type="email" placeholder="Email" required />
+                    <input type="password" placeholder="Password" required />
+                    <button type="submit">Register</button>
+                </form>
             </div>
         </div>
-    </div>
 
-    <footer>
-        <div class="footer-content">
-            <div class="socials">
-                <h3>Follow Us</h3>
-                <ul>
-                    <li>
-                        <a href="https://www.facebook.com/profile.php?id=61583977140202"><i
-                                class="fab fa-facebook"></i></a>
-                    </li>
-                    <li>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                    </li>
-                    <li>
-                        <a href="https://www.instagram.com/techie_das/"><i class="fab fa-instagram"></i></a>
-                    </li>
-                    <li>
-                        <a href="#"><i class="fab fa-youtube"></i></a>
-                    </li>
-                </ul>
+        <section id="home">
+            <div class="hero">
+                <h1 data-content="CARZ">CARZ</h1>
+                <p>Find Your Drive. Win the Bid.</p>
             </div>
-            <div class="contactUs">
-                <h3>Contact Us</h3>
-                <ul>
-                    <li>
-                        <a href="mailto:info@carz.com">info@carz.com</a>
-                    </li>
-                    <li>
-                        <a href="https://wa.me/254012345678">WhatsApp</a>
-                    </li>
-                    <li><a href="tel:+254012345678">+254-012345678</a></li>
-                </ul>
-            </div>
-            <div class="quick-links">
-                <h3>Quick Links</h3>
-                <ul>
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#auctions">Auctions</a></li>
-                    <li><a href="#contact">Contact us</a></li>
-                </ul>
-            </div>
-            <div class="newsletter">
-                <h3>Newsletter</h3>
-                <div class="userEmail">
-                    <input id="email" type="email" placeholder="Enter your email" />
+        </section>
+
+        <section id="auctions">
+            <div class="previews">
+                <h1>Auctions</h1>
+                <div class="auctions-container" id="auctions-container">
+                    <!-- Auction items will be dynamically loaded here -->
                 </div>
-                <div class="sub">
-                    <button>Subscribe</button>
+            </div>
+        </section>
+
+        <!-- Car Detail Modal -->
+        <div id="car-modal" class="car-modal">
+            <div class="car-modal-content">
+                <span class="close-car-modal" onclick="closeCarModal()"
+                    >&times;</span
+                >
+                <div class="car-details-container" id="car-details-container">
+                    <!-- Car details will be dynamically loaded here -->
                 </div>
             </div>
         </div>
-        <div class="footer-bottom">
-            <p>T&Cs</p>
-            <p>copyright 2025 XDEVS</p>
-        </div>
-    </footer>
 
-    <script src="./auction.js"></script>
-</body>
+        <footer>
+            <div class="footer-content">
+                <div class="socials">
+                    <h3>Follow Us</h3>
+                    <ul>
+                        <li>
+                            <a href="https://www.facebook.com/profile.php?id=61584049921423"><i class="fab fa-facebook"></i></a>
+                        </li>
+                        <li>
+                            <a href="https://x.com/CARZValour"><i class="fa-brands fa-x-twitter"></i>
+</a>
+                        </li>
+                        <li>
+                            <a href="#"><i class="fab fa-youtube"></i></a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="contactUs">
+                    <h3>Contact Us</h3>
+                    <ul>
+                        <li>
+                            <a href="mailto:carzvalour@gmail.com">info@carz.com</a>
+                        </li>
+                        <li>
+                            <a href="https://wa.me/254012345678">WhatsApp</a>
+                        </li>
+                        <li><a href="tel:+254012345678">+254-711295049</a></li>
+                    </ul>
+                </div>
+                <div class="quick-links">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#auctions">Auctions</a></li>
+                        <li><a href="#contact">Contact us</a></li>
+                    </ul>
+                </div>
+                <div class="newsletter">
+                    <h3>Newsletter</h3>
+                    <div class="userEmail">
+                     <input id="email" type="email" placeholder="Enter your email" />
+                    </div>
+                    <div class="sub">
+                        <button onclick="subscribe()">Subscribe</button>
+                    </div>
+                </div>
 
+            </div>
+            <div class="footer-bottom">
+                <p>T&Cs</p>
+                <p>copyright 2025 XDEVS</p>
+            </div>
+        </footer>
+        <script>
+            function subscribe() {
+                const email = document.getElementById("email").value;
+
+            if (!email) {
+            alert("Please enter your email");
+            return;
+             }
+
+                emailjs.send("service_1q826dn", "template_ozin8cd", {
+                   subscriber_email: email
+             }).then(
+                  () => alert("Subscription sent!"),
+                   (err) => alert("Failed to send: " + JSON.stringify(err))
+             );
+            }
+        </script>
+
+        <script src="./auction.js"></script>
+    </body>
 </html>
