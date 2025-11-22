@@ -224,3 +224,33 @@ class CarAuction {
       console.error("auctions-container not found!");
       return;
     }
+ container.innerHTML = "";
+
+    this.auctions.forEach((auction) => {
+      const auctionElement = this.createAuctionElement(auction);
+      container.appendChild(auctionElement);
+    });
+  }
+
+  createAuctionElement(auction) {
+    const div = document.createElement("div");
+    div.className = "auction-item";
+    div.style.cursor = "pointer";
+    div.onclick = () => this.openCarModal(auction.id);
+
+    div.innerHTML = `
+            <img src="${auction.image}" alt="${auction.name}" class="auction-image">
+            <h3 class="car-name">${auction.name}</h3>
+            <p class="car-info">${auction.description}</p>
+            <div class="current-bid">Current Bid: $${auction.currentBid.toLocaleString()}</div>
+            <div class="bid-info">
+                <span>Bidders: ${auction.bidderCount}</span>
+                <span>Starting: $${auction.startingBid.toLocaleString()}</span>
+            </div>
+            <div class="timer" id="timer-${auction.id}">
+                ${this.formatTimeRemaining(auction.endTime)}
+            </div>
+            ${this.createBidForm(auction)}
+        `;
+    return div;
+  }
