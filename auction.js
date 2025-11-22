@@ -382,11 +382,10 @@ class CarAuction {
       return `
                 <div class="auction-ended">
                     Auction Ended
-                    ${
-                      auction.bids.length > 0
-                        ? `<div class="winning-bid">Winning Bid: KSH ${Math.max(...auction.bids.map((b) => b.amount)).toLocaleString()}</div>`
-                        : "<div>No bids placed</div>"
-                    }
+                    ${auction.bids.length > 0
+          ? `<div class="winning-bid">Winning Bid: KSH ${Math.max(...auction.bids.map((b) => b.amount)).toLocaleString()}</div>`
+          : "<div>No bids placed</div>"
+        }
                 </div>
             `;
     }
@@ -569,11 +568,10 @@ class CarAuction {
                     ${this.formatTimeRemaining(auction.endTime)}
                 </div>
 
-                ${
-                  hasEnded
-                    ? '<div class="auction-ended" style="margin-top: 20px; text-align: center; padding: 15px; background: rgba(255,0,0,0.3); border-radius: 8px;">Auction Ended</div>'
-                    : this.createModalBidForm(auction, userHasBid)
-                }
+                ${hasEnded
+        ? '<div class="auction-ended" style="margin-top: 20px; text-align: center; padding: 15px; background: rgba(255,0,0,0.3); border-radius: 8px;">Auction Ended</div>'
+        : this.createModalBidForm(auction, userHasBid)
+      }
             </div>
         `;
   }
@@ -635,9 +633,8 @@ class CarAuction {
                     <span>Starting Bid: KSH ${auction.startingBid.toLocaleString()}</span>
                     <span>Bidders: ${auction.bidderCount}</span>
                 </div>
-                ${
-                  this.currentUser
-                    ? `
+                ${this.currentUser
+        ? `
                     <div class="bid-form-modal">
                         <input type="number"
                                class="bid-input-modal"
@@ -650,12 +647,12 @@ class CarAuction {
                         </button>
                     </div>
                 `
-                    : `
+        : `
                     <p style="text-align: center; color: var(--text-color1);">
                         <a href="#" onclick="toggleLogin(); closeCarModal();" style="color: var(--space-p-color);">Login</a> to place a bid
                     </p>
                 `
-                }
+      }
             </div>
         `;
   }
@@ -889,6 +886,7 @@ document.addEventListener("keydown", function (event) {
     toggleRegister();
   }
 });
+
 
 
 
