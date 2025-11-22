@@ -24,3 +24,23 @@ document.addEventListener("DOMContentLoaded", function () {
       mobileMenu.classList.remove("active");
     });
   }
+
+// Close menu when clicking outside
+  document.addEventListener("click", function (event) {
+    if (mobileMenu.classList.contains("active")) {
+      if (
+        !mobileMenu.contains(event.target) &&
+        !menuIcon.contains(event.target)
+      ) {
+        mobileMenu.classList.remove("active");
+      }
+    }
+  });
+
+  // Close menu when clicking on links
+  const menuLinks = mobileMenu.querySelectorAll("a");
+  menuLinks.forEach((link) => {
+    link.addEventListener("click", function () {
+      mobileMenu.classList.remove("active");
+    });
+  });
