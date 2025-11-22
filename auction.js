@@ -44,3 +44,10 @@ document.addEventListener("DOMContentLoaded", function () {
       mobileMenu.classList.remove("active");
     });
   });
+ // Close menu with
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && mobileMenu.classList.contains("active")) {
+      mobileMenu.classList.remove("active");
+    }
+  });
+});
