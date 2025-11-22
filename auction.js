@@ -17,3 +17,10 @@ document.addEventListener("DOMContentLoaded", function () {
       toggleMobileMenu();
     });
   }
+
+  // Close menu when clicking X button
+  if (closeMenu) {
+    closeMenu.addEventListener("click", function () {
+      mobileMenu.classList.remove("active");
+    });
+  }
