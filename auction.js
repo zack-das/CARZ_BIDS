@@ -292,3 +292,293 @@ class CarAuction {
             ${!this.currentUser ? '<p style="text-align:center;margin-top:10px;color:var(--text-color1);">Please login to bid</p>' : ""}
         `;
   }
+
+ formatTimeRemaining(endTime) {
+    const now = new Date();
+    let diff = endTime - now;
+
+    if (diff <= 0) return "Auction Ended";
+
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    return ${days}d ${hours % 24}h ${minutes % 60}m ${seconds % 60}s;
+  }
+
+  startTimers() {
+    setInterval(() => {
+      this.auctions.forEach((auction) => {
+        const timerElement = document.getElementById(timer-${auction.id});
+        if (timerElement) {
+          timerElement.textContent = this.formatTimeRemaining(auction.endTime);
+
+          if (auction.endTime - new Date() < 3600000) {
+            timerElement.classList.add("expiring");
+          }
+
+          if (auction.endTime <= new Date()) {
+            this.endAuction(auction.id);
+          }
+        }
+      });
+    }, 1000);
+  }
+
+  async placeBid(auctionId, bidAmount = null) {
+    if (!this.currentUser) {
+      alert("Please login to place a bid");
+      toggleLogin();
+      return;
+    }
+
+    const auction = this.auctions.find((a) => a.id === auctionId);
+
+    if (!bidAmount) {
+      const bidInput = document.querySelector(
+        #timer-${auctionId} ~ .bid-form .bid-input,
+      );
+      bidAmount = parseInt(bidInput.value);
+    }
+
+    if (!bidAmount || bidAmount < auction.currentBid + 1000) {
+      alert(
+        Bid must be at least $${(auction.currentBid + 1000).toLocaleString()},
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        ${this.API_BASE}/auctions/${auctionId}/bid,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: this.currentUser.id,
+            amount: bidAmount,
+          }),
+        },
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Reload auctions to get updated data
+        await this.loadAuctions();
+
+        // Update modal if open
+        if (document.getElementById("car-modal")?.style.display === "block") {
+          this.openCarModal(auctionId);
+        }
+
+        alert(Bid of $${bidAmount.toLocaleString()} placed successfully!);
+      } else {
+        alert("Bid failed: " + result.error);
+      }
+    } catch (error) {
+      console.error("Bid error:", error);
+      // Fallback to frontend-only bid placement
+      auction.bids.push({
+        userId: this.currentUser.id,
+        userName: this.currentUser.name,
+        amount: bidAmount,
+        timestamp: new Date(),
+      });
+
+      auction.currentBid = bidAmount;
+      auction.bidderCount = new Set(auction.bids.map((b) => b.userId)).size;
+
+      this.renderAuctions();
+
+      if (document.getElementById("car-modal")?.style.display === "block") {
+        this.openCarModal(auctionId);
+      }
+
+      alert(Bid of $${bidAmount.toLocaleString()} placed successfully!);
+    }
+  }
+
+  // Modal functionality
+  openCarModal(auctionId) {
+    const auction = this.auctions.find((a) => a.id === auctionId);
+    if (!auction) return;
+
+    const modal = document.getElementById("car-modal");
+    const container = document.getElementById("car-details-container");
+
+    if (!modal || !container) {
+      console.error("Modal elements not found!");
+      return;
+    }
+
+    container.innerHTML = this.createCarModalContent(auction);
+    modal.style.display = "block";
+    document.body.style.overflow = "hidden";
+  }
+
+  createCarModalContent(auction) {
+    const hasEnded = auction.endTime <= new Date();
+    const userHasBid =
+      this.currentUser &&
+      auction.bids.some((bid) => bid.userId === this.currentUser?.id);
+
+    return `
+            <div class="media-gallery">
+                <div class="main-media" id="main-media">
+                    <img src="${auction.image}" alt="${auction.name}" id="main-media-display">
+                </div>
+                <div class="media-thumbnails">
+                    ${this.createGalleryThumbnails(auction)}
+                </div>
+            </div>
+
+            <div class="car-info-details">
+                <h2 class="car-title-modal">${auction.name}</h2>
+                <div class="car-price-modal">Current Bid: $${auction.currentBid.toLocaleString()}</div>
+                <p class="car-description-modal">${auction.description}</p>
+
+                <div class="car-specs">
+                    <h3 style="color: var(--text-color1); margin-bottom: 15px; font-family: 'boxigen';">Specifications</h3>
+                    ${this.createSpecsList(auction.specs || {})}
+                </div>
+
+                <div class="timer-modal" id="modal-timer-${auction.id}">
+                    ${this.formatTimeRemaining(auction.endTime)}
+                </div>
+
+                ${
+                  hasEnded
+                    ? '<div class="auction-ended" style="margin-top: 20px; text-align: center; padding: 15px; background: rgba(255,0,0,0.3); border-radius: 8px;">Auction Ended</div>'
+                    : this.createModalBidForm(auction, userHasBid)
+                }
+            </div>
+        `;
+  }
+
+  createGalleryThumbnails(auction) {
+    if (!auction.gallery || auction.gallery.length === 0) {
+      return `<div class="thumbnail active" onclick="carAuction.changeMainMedia('${auction.image}', 'image', this)">
+                  <img src="${auction.image}" alt="${auction.name}">
+              </div>`;
+    }
+
+    let thumbnails = "";
+    auction.gallery.forEach((media, index) => {
+      const isActive = index === 0 ? "active" : "";
+
+      thumbnails += `
+        <div class="thumbnail ${isActive}" onclick="carAuction.changeMainMedia('${media.src}', '${media.type}', this)">
+            ${media.type === "iframe" ? '<div class="video-indicator">VIDEO</div>' : ""}
+            <img src="${media.type === "iframe" ? auction.image : media.src}" alt="${media.alt}">
+        </div>
+      `;
+    });
+
+    return thumbnails;
+  }
+
+  createSpecsList(specs) {
+    const specEntries = Object.entries(specs);
+    if (specEntries.length === 0) {
+      return "<p>No specifications available</p>";
+    }
+
+    return specEntries
+      .map(
+        ([key, value]) => `
+            <div class="spec-item">
+                <span class="spec-label">${this.formatSpecLabel(key)}</span>
+                <span class="spec-value">${value}</span>
+            </div>
+        `,
+      )
+      .join("");
+  }
+
+  formatSpecLabel(key) {
+    return key
+      .replace(/([A-Z])/g, " $1")
+      .replace(/^./, (str) => str.toUpperCase());
+  }
+
+  createModalBidForm(auction, userHasBid) {
+    if (userHasBid) {
+      return '<div class="auction-ended" style="margin-top: 20px; text-align: center; padding: 15px; background: rgba(0,255,0,0.2); border-radius: 8px;">You have already placed a bid on this vehicle</div>';
+    }
+
+    return `
+            <div class="bid-section-modal">
+                <div class="bid-info-modal">
+                    <span>Starting Bid: $${auction.startingBid.toLocaleString()}</span>
+                    <span>Bidders: ${auction.bidderCount}</span>
+                </div>
+                ${
+                  this.currentUser
+                    ? `
+                    <div class="bid-form-modal">
+                        <input type="number"
+                               class="bid-input-modal"
+                               placeholder="Enter bid (min: $${(auction.currentBid + 1000).toLocaleString()})"
+                               min="${auction.currentBid + 1000}"
+                               step="1000"
+                               id="modal-bid-input-${auction.id}">
+                        <button class="bid-btn-modal" onclick="event.stopPropagation(); carAuction.placeBidFromModal(${auction.id})">
+                            Place Bid
+                        </button>
+                    </div>
+                `
+                    : `
+                    <p style="text-align: center; color: var(--text-color1);">
+                        <a href="#" onclick="toggleLogin(); closeCarModal();" style="color: var(--space-p-color);">Login</a> to place a bid
+                    </p>
+                `
+                }
+            </div>
+        `;
+  }
+
+  changeMainMedia(src, type, thumbElement) {
+    const mainMedia = document.getElementById("main-media");
+    if (!mainMedia) return;
+
+    if (type === "iframe") {
+      mainMedia.innerHTML = `
+        <iframe
+          src="${src}"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          style="width: 100%; height: 100%; border-radius: 10px;">
+        </iframe>
+      `;
+    } else if (type === "video") {
+      mainMedia.innerHTML = `
+        <video controls autoplay style="width: 100%; height: 100%; object-fit: cover;">
+          <source src="${src}" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      `;
+    } else {
+      mainMedia.innerHTML = `
+        <img src="${src}" id="main-media-display" style="width: 100%; height: 100%; object-fit: cover;">
+      `;
+    }
+
+    // Update active thumbnail
+    document
+      .querySelectorAll(".thumbnail")
+      .forEach((t) => t.classList.remove("active"));
+    if (thumbElement) thumbElement.classList.add("active");
+  }
+
+  placeBidFromModal(auctionId) {
+    const bidInput = document.getElementById(modal-bid-input-${auctionId});
+    if (!bidInput) return;
+
+    const bidAmount = parseInt(bidInput.value);
+    this.placeBid(auctionId, bidAmount);
+  }
