@@ -582,3 +582,185 @@ class CarAuction {
     const bidAmount = parseInt(bidInput.value);
     this.placeBid(auctionId, bidAmount);
   }
+setupEventListeners() {
+    // Login form
+    document.getElementById("login-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      this.handleLogin();
+    });
+
+    // Register form
+    document.getElementById("register-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      this.handleRegister();
+    });
+  }
+
+  async handleLogin() {
+    const form = document.getElementById("login-form");
+    const email = form.querySelector('input[type="email"]').value;
+    const password = form.querySelector('input[type="password"]').value;
+
+    try {
+      const response = await fetch(${this.API_BASE}/login, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        this.currentUser = result.user;
+        toggleLogin();
+        this.checkLoginStatus();
+        await this.loadAuctions();
+        alert("Login successful!");
+      } else {
+        alert("Login failed: " + result.error);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      // Fallback to frontend-only login
+      if (email && password) {
+        this.currentUser = {
+          id: Math.random().toString(36).substr(2, 9),
+          email: email,
+          name: email.split("@")[0],
+        };
+
+        toggleLogin();
+        this.checkLoginStatus();
+        this.renderAuctions();
+        alert("Login successful!");
+      } else {
+        alert("Please enter both email and password");
+      }
+    }
+  }
+
+  async handleRegister() {
+    const form = document.getElementById("register-form");
+    const name = form.querySelector('input[type="text"]').value;
+    const email = form.querySelector('input[type="email"]').value;
+    const password = form.querySelector('input[type="password"]').value;
+
+    try {
+      const response = await fetch(${this.API_BASE}/register, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Auto-login after successful registration
+        const loginResponse = await fetch(${this.API_BASE}/login, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const loginResult = await loginResponse.json();
+
+        if (loginResult.success) {
+          this.currentUser = loginResult.user;
+          toggleRegister();
+          this.checkLoginStatus();
+          await this.loadAuctions();
+          alert("Registration successful! You are now logged in.");
+        }
+      } else {
+        alert("Registration failed: " + result.error);
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      // Fallback to frontend-only registration
+      if (name && email && password) {
+        this.currentUser = {
+          id: Math.random().toString(36).substr(2, 9),
+          email: email,
+          name: name,
+        };
+
+        toggleRegister();
+        this.checkLoginStatus();
+        this.renderAuctions();
+        alert("Registration successful! You are now logged in.");
+      } else {
+        alert("Please fill all fields");
+      }
+    }
+  }
+
+  checkLoginStatus() {
+    const loginBtn = document.getElementById("login-btn");
+    if (this.currentUser) {
+      loginBtn.innerHTML = <a href="#" onclick="carAuction.logout()">Logout </a>;
+    } else {
+      loginBtn.innerHTML = '<a href="#" onclick="toggleLogin()">Login</a>';
+    }
+  }
+
+  logout() {
+    this.currentUser = null;
+    this.checkLoginStatus();
+    this.renderAuctions();
+    alert("Logged out successfully");
+  }
+}
+
+// Modal functions
+function toggleLogin() {
+  const modal = document.getElementById("login-modal");
+  modal.style.display = modal.style.display === "block" ? "none" : "block";
+}
+
+function toggleRegister() {
+  const loginModal = document.getElementById("login-modal");
+  const registerModal = document.getElementById("register-modal");
+
+  loginModal.style.display = "none";
+  registerModal.style.display =
+    registerModal.style.display === "block" ? "none" : "block";
+}
+
+function closeCarModal() {
+  const modal = document.getElementById("car-modal");
+  modal.style.display = "none";
+  document.body.style.overflow = "auto";
+}
+
+// Close modals when clicking outside
+window.onclick = function (event) {
+  const modals = document.getElementsByClassName("modal");
+  for (let modal of modals) {
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
+  }
+
+  const carModal = document.getElementById("car-modal");
+  if (event.target === carModal) {
+    closeCarModal();
+  }
+};
+
+// Close modal with Escape key
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Escape") {
+    closeCarModal();
+    toggleLogin();
+    toggleRegister();
+  }
+});
+
+// Initialize the auction system
+const carAuction = new CarAuction();
