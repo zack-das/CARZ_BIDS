@@ -254,3 +254,41 @@ class CarAuction {
         `;
     return div;
   }
+ createBidForm(auction) {
+    const hasEnded = auction.endTime <= new Date();
+    const userHasBid =
+      this.currentUser &&
+      auction.bids.some((bid) => bid.userId === this.currentUser?.id);
+
+    if (hasEnded) {
+      return `
+                <div class="auction-ended">
+                    Auction Ended
+                    ${
+                      auction.bids.length > 0
+                        ? <div class="winning-bid">Winning Bid: $${Math.max(...auction.bids.map((b) => b.amount)).toLocaleString()}</div>
+                        : "<div>No bids placed</div>"
+                    }
+                </div>
+            `;
+    }
+
+    if (userHasBid) {
+      return '<div class="auction-ended">You have already placed a bid on this vehicle</div>';
+    }
+
+    return `
+            <div class="bid-form">
+                <input type="number"
+                       class="bid-input"
+                       placeholder="Enter your bid (min: $${(auction.currentBid + 1000).toLocaleString()})"
+                       min="${auction.currentBid + 1000}"
+                       step="1000">
+                <button class="bid-btn" onclick="event.stopPropagation(); carAuction.placeBid(${auction.id})"
+                        ${!this.currentUser ? "disabled" : ""}>
+                    Place Bid
+                </button>
+            </div>
+            ${!this.currentUser ? '<p style="text-align:center;margin-top:10px;color:var(--text-color1);">Please login to bid</p>' : ""}
+        `;
+  }
