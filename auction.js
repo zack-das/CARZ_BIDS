@@ -57,7 +57,9 @@ class CarAuction {
   constructor() {
     this.currentUser = null;
     this.auctions = [];
+    this.filteredAuctions = [];
     this.API_BASE = "http://localhost:3001/api"; // Backend API base URL
+    this.searchTerm = '';
     this.init();
   }
 
@@ -79,6 +81,8 @@ class CarAuction {
         endTime: new Date(auction.end_time),
         bids: [], // Initialize empty bids array
       }));
+      this.filteredAuctions = [...this.auctions];
+
       this.renderAuctions();
       this.startTimers();
     } catch (error) {
@@ -213,7 +217,7 @@ class CarAuction {
         },
       },
     ];
-
+    this.filteredAuctions = [...this.auctions];
     this.renderAuctions();
     this.startTimers();
   }
@@ -226,12 +230,29 @@ class CarAuction {
     }
 
     container.innerHTML = "";
+ if (this.filteredAuctions.length === 0) {
+            // Show no results message
+            container.innerHTML = this.createNoResultsMessage();
+            return;
+        }
 
-    this.auctions.forEach((auction) => {
-      const auctionElement = this.createAuctionElement(auction);
-      container.appendChild(auctionElement);
-    });
+        this.filteredAuctions.forEach((auction) => {
+            const auctionElement = this.createAuctionElement(auction);
+            container.appendChild(auctionElement);
+        });
   }
+
+ createNoResultsMessage() {
+        return `
+            <div class="no-results">
+                <i class="fas fa-search"></i>
+                <h3>No matching auctions found</h3>
+                <p>Try searching with different keywords like car name, model, or specifications</p>
+                ${this.searchTerm ? `<p>Search term: "${this.searchTerm}"</p>` : ''}
+            </div>
+        `;
+    }
+
 
   createAuctionElement(auction) {
     const div = document.createElement("div");
@@ -597,7 +618,69 @@ class CarAuction {
       e.preventDefault();
       this.handleRegister();
     });
+
+     // Search functionality - ADD THIS
+        const searchInput = document.getElementById("auction-search");
+        if (searchInput) {
+            searchInput.addEventListener("input", (e) => {
+                this.searchTerm = e.target.value.toLowerCase().trim();
+                this.filterAuctions();
+            });
+
+            // Clear search when Escape is pressed
+            searchInput.addEventListener("keydown", (e) => {
+                if (e.key === 'Escape') {
+                    e.target.value = '';
+                    this.searchTerm = '';
+                    this.filterAuctions();
+                }
+            });
+        }
   }
+
+
+  filterAuctions() {
+        if (!this.searchTerm) {
+            // If no search term, show all auctions
+            this.filteredAuctions = [...this.auctions];
+        } else {
+            // Filter auctions based on search term
+            this.filteredAuctions = this.auctions.filter(auction =>
+                this.doesAuctionMatchSearch(auction, this.searchTerm)
+            );
+        }
+        this.renderAuctions();
+    }
+
+doesAuctionMatchSearch(auction, searchTerm) {
+        // Search in name
+        if (auction.name.toLowerCase().includes(searchTerm)) {
+            return true;
+        }
+
+        // Search in description
+        if (auction.description.toLowerCase().includes(searchTerm)) {
+            return true;
+        }
+
+        // Search in specifications
+        if (auction.specs) {
+            const specValues = Object.values(auction.specs).map(value =>
+                value.toString().toLowerCase()
+            );
+            if (specValues.some(value => value.includes(searchTerm))) {
+                return true;
+            }
+        }
+
+        // Search in current bid (as string)
+        if (auction.currentBid.toString().includes(searchTerm)) {
+            return true;
+        }
+
+        return false;
+    }
+
 
   async handleLogin() {
     const form = document.getElementById("login-form");
