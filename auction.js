@@ -4,11 +4,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const menuIcon = document.getElementById("menu-icon");
   const closeMenu = document.getElementById("closeMenu");
 
-// Toggle menu function
+  // Toggle menu function
   function toggleMobileMenu() {
     mobileMenu.classList.toggle("active");
   }
-
 
   // Open menu when clicking hamburger icon
   if (menuIcon) {
@@ -25,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-// Close menu when clicking outside
+  // Close menu when clicking outside
   document.addEventListener("click", function (event) {
     if (mobileMenu.classList.contains("active")) {
       if (
@@ -44,7 +43,8 @@ document.addEventListener("DOMContentLoaded", function () {
       mobileMenu.classList.remove("active");
     });
   });
- // Close menu with
+
+  // Close menu with Escape key
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && mobileMenu.classList.contains("active")) {
       mobileMenu.classList.remove("active");
@@ -69,7 +69,7 @@ class CarAuction {
 
   async loadAuctions() {
     try {
-      const response = await fetch(${this.API_BASE}/auctions);
+      const response = await fetch(`${this.API_BASE}/auctions`);
       if (!response.ok) {
         throw new Error("Failed to fetch auctions");
       }
@@ -224,7 +224,8 @@ class CarAuction {
       console.error("auctions-container not found!");
       return;
     }
- container.innerHTML = "";
+
+    container.innerHTML = "";
 
     this.auctions.forEach((auction) => {
       const auctionElement = this.createAuctionElement(auction);
@@ -242,10 +243,10 @@ class CarAuction {
             <img src="${auction.image}" alt="${auction.name}" class="auction-image">
             <h3 class="car-name">${auction.name}</h3>
             <p class="car-info">${auction.description}</p>
-            <div class="current-bid">Current Bid: $${auction.currentBid.toLocaleString()}</div>
+            <div class="current-bid">Current Bid: ksh${auction.currentBid.toLocaleString()}</div>
             <div class="bid-info">
                 <span>Bidders: ${auction.bidderCount}</span>
-                <span>Starting: $${auction.startingBid.toLocaleString()}</span>
+                <span>Starting: ksh${auction.startingBid.toLocaleString()}</span>
             </div>
             <div class="timer" id="timer-${auction.id}">
                 ${this.formatTimeRemaining(auction.endTime)}
@@ -254,7 +255,8 @@ class CarAuction {
         `;
     return div;
   }
- createBidForm(auction) {
+
+  createBidForm(auction) {
     const hasEnded = auction.endTime <= new Date();
     const userHasBid =
       this.currentUser &&
@@ -266,7 +268,7 @@ class CarAuction {
                     Auction Ended
                     ${
                       auction.bids.length > 0
-                        ? <div class="winning-bid">Winning Bid: $${Math.max(...auction.bids.map((b) => b.amount)).toLocaleString()}</div>
+                        ? `<div class="winning-bid">Winning Bid: ksh${Math.max(...auction.bids.map((b) => b.amount)).toLocaleString()}</div>`
                         : "<div>No bids placed</div>"
                     }
                 </div>
@@ -281,7 +283,7 @@ class CarAuction {
             <div class="bid-form">
                 <input type="number"
                        class="bid-input"
-                       placeholder="Enter your bid (min: $${(auction.currentBid + 1000).toLocaleString()})"
+                       placeholder="Enter your bid (min: ksh${(auction.currentBid + 1000).toLocaleString()})"
                        min="${auction.currentBid + 1000}"
                        step="1000">
                 <button class="bid-btn" onclick="event.stopPropagation(); carAuction.placeBid(${auction.id})"
@@ -293,7 +295,7 @@ class CarAuction {
         `;
   }
 
- formatTimeRemaining(endTime) {
+  formatTimeRemaining(endTime) {
     const now = new Date();
     let diff = endTime - now;
 
@@ -304,13 +306,13 @@ class CarAuction {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
-    return ${days}d ${hours % 24}h ${minutes % 60}m ${seconds % 60}s;
+    return `${days}d ${hours % 24}h ${minutes % 60}m ${seconds % 60}s`;
   }
 
   startTimers() {
     setInterval(() => {
       this.auctions.forEach((auction) => {
-        const timerElement = document.getElementById(timer-${auction.id});
+        const timerElement = document.getElementById(`timer-${auction.id}`);
         if (timerElement) {
           timerElement.textContent = this.formatTimeRemaining(auction.endTime);
 
@@ -337,21 +339,21 @@ class CarAuction {
 
     if (!bidAmount) {
       const bidInput = document.querySelector(
-        #timer-${auctionId} ~ .bid-form .bid-input,
+        `#timer-${auctionId} ~ .bid-form .bid-input`,
       );
       bidAmount = parseInt(bidInput.value);
     }
 
     if (!bidAmount || bidAmount < auction.currentBid + 1000) {
       alert(
-        Bid must be at least $${(auction.currentBid + 1000).toLocaleString()},
+        `Bid must be at least ksh${(auction.currentBid + 1000).toLocaleString()}`,
       );
       return;
     }
 
     try {
       const response = await fetch(
-        ${this.API_BASE}/auctions/${auctionId}/bid,
+        `${this.API_BASE}/auctions/${auctionId}/bid`,
         {
           method: "POST",
           headers: {
@@ -375,7 +377,7 @@ class CarAuction {
           this.openCarModal(auctionId);
         }
 
-        alert(Bid of $${bidAmount.toLocaleString()} placed successfully!);
+        alert(`Bid of ksh${bidAmount.toLocaleString()} placed successfully!`);
       } else {
         alert("Bid failed: " + result.error);
       }
@@ -398,7 +400,7 @@ class CarAuction {
         this.openCarModal(auctionId);
       }
 
-      alert(Bid of $${bidAmount.toLocaleString()} placed successfully!);
+      alert(`Bid of ksh${bidAmount.toLocaleString()} placed successfully!`);
     }
   }
 
@@ -438,7 +440,7 @@ class CarAuction {
 
             <div class="car-info-details">
                 <h2 class="car-title-modal">${auction.name}</h2>
-                <div class="car-price-modal">Current Bid: $${auction.currentBid.toLocaleString()}</div>
+                <div class="car-price-modal">Current Bid: ksh${auction.currentBid.toLocaleString()}</div>
                 <p class="car-description-modal">${auction.description}</p>
 
                 <div class="car-specs">
@@ -513,7 +515,7 @@ class CarAuction {
     return `
             <div class="bid-section-modal">
                 <div class="bid-info-modal">
-                    <span>Starting Bid: $${auction.startingBid.toLocaleString()}</span>
+                    <span>Starting Bid: ksh${auction.startingBid.toLocaleString()}</span>
                     <span>Bidders: ${auction.bidderCount}</span>
                 </div>
                 ${
@@ -522,7 +524,7 @@ class CarAuction {
                     <div class="bid-form-modal">
                         <input type="number"
                                class="bid-input-modal"
-                               placeholder="Enter bid (min: $${(auction.currentBid + 1000).toLocaleString()})"
+                               placeholder="Enter bid (min: ksh${(auction.currentBid + 1000).toLocaleString()})"
                                min="${auction.currentBid + 1000}"
                                step="1000"
                                id="modal-bid-input-${auction.id}">
@@ -576,13 +578,14 @@ class CarAuction {
   }
 
   placeBidFromModal(auctionId) {
-    const bidInput = document.getElementById(modal-bid-input-${auctionId});
+    const bidInput = document.getElementById(`modal-bid-input-${auctionId}`);
     if (!bidInput) return;
 
     const bidAmount = parseInt(bidInput.value);
     this.placeBid(auctionId, bidAmount);
   }
-setupEventListeners() {
+
+  setupEventListeners() {
     // Login form
     document.getElementById("login-form").addEventListener("submit", (e) => {
       e.preventDefault();
@@ -602,7 +605,7 @@ setupEventListeners() {
     const password = form.querySelector('input[type="password"]').value;
 
     try {
-      const response = await fetch(${this.API_BASE}/login, {
+      const response = await fetch(`${this.API_BASE}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -648,7 +651,7 @@ setupEventListeners() {
     const password = form.querySelector('input[type="password"]').value;
 
     try {
-      const response = await fetch(${this.API_BASE}/register, {
+      const response = await fetch(`${this.API_BASE}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -660,7 +663,7 @@ setupEventListeners() {
 
       if (result.success) {
         // Auto-login after successful registration
-        const loginResponse = await fetch(${this.API_BASE}/login, {
+        const loginResponse = await fetch(`${this.API_BASE}/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -703,7 +706,7 @@ setupEventListeners() {
   checkLoginStatus() {
     const loginBtn = document.getElementById("login-btn");
     if (this.currentUser) {
-      loginBtn.innerHTML = <a href="#" onclick="carAuction.logout()">Logout </a>;
+      loginBtn.innerHTML = `<a href="#" onclick="carAuction.logout()">Logout </a>`;
     } else {
       loginBtn.innerHTML = '<a href="#" onclick="toggleLogin()">Login</a>';
     }
