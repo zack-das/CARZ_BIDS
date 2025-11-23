@@ -92,13 +92,24 @@
         </section>
 
         <section id="auctions">
-            <div class="previews">
-                <h1>Auctions</h1>
-                <div class="auctions-container" id="auctions-container">
-                    <!-- Auction items will be dynamically loaded here -->
-                </div>
+    <div class="previews">
+        <div class="auctions-header">
+            <h1>Auctions</h1>
+            <div class="search-container">
+                <input
+                    type="text"
+                    id="auction-search"
+                    placeholder="Search cars by name or description..."
+                    class="search-input"
+                >
+                <i class="fas fa-search search-icon"></i>
             </div>
-        </section>
+        </div>
+        <div class="auctions-container" id="auctions-container">
+            <!-- Auction items will be dynamically loaded here -->
+        </div>
+    </div>
+</section>
 
         <!-- Car Detail Modal -->
         <div id="car-modal" class="car-modal">
