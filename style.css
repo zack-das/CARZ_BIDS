@@ -32,6 +32,109 @@ body {
     src: url(/Fonts/BOXIGEN.ttf) format("truetype");
 }
 
+/* ===== CUSTOM TOAST NOTIFICATION STYLES ===== */
+.custom-toast {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: var(--text-color1);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    max-width: 350px;
+    transform: translateX(400px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-family: "boxigen", sans-serif;
+    border-left: 4px solid rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.custom-toast.show {
+    transform: translateX(0);
+}
+
+.custom-toast.error {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    border-left-color: #ff6b6b;
+}
+
+.custom-toast.success {
+    background: linear-gradient(135deg, var(--space-p-color), #00cc00);
+    border-left-color: #7fff00;
+}
+
+.custom-toast.warning {
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    border-left-color: #f1c40f;
+}
+
+.custom-toast.info {
+    background: linear-gradient(135deg, var(--text-color1), #0077cc);
+    border-left-color: #3498db;
+}
+
+.toast-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.3rem;
+    cursor: pointer;
+    margin-left: 15px;
+    float: right;
+    opacity: 0.8;
+    transition: all 0.3s ease;
+    line-height: 1;
+    padding: 0;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.toast-close:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+/* No results message */
+.no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-color);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    border: 2px solid var(--text-color1);
+    margin: 40px auto;
+    max-width: 500px;
+    backdrop-filter: blur(10px);
+}
+
+.no-results i {
+    font-size: 4rem;
+    color: var(--text-color1);
+    margin-bottom: 20px;
+    opacity: 0.7;
+}
+
+.no-results h3 {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    color: var(--text-color1);
+    font-family: "boxigen";
+}
+
+.no-results p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    line-height: 1.6;
+}
+
 /* Header stylings */
 header {
     display: flex;
@@ -1142,6 +1245,19 @@ footer {
         flex-direction: column;
         gap: 15px;
         text-align: center;
+    }
+
+    /* Toast notifications for mobile */
+    .custom-toast {
+        top: 60px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+        transform: translateY(-100px);
+    }
+
+    .custom-toast.show {
+        transform: translateY(0);
     }
 }
 
