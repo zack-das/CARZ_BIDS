@@ -52,6 +52,186 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+// Cross-Platform Notification System
+class NotificationManager {
+    static async show(message, title = 'Car Auction', type = 'info') {
+        // Check if we're in a Capacitor environment
+        const isCapacitor = typeof capacitor !== 'undefined' && capacitor.Plugins && capacitor.Plugins.Dialog;
+
+        if (isCapacitor && this.isNativePlatform()) {
+            // Use Capacitor Dialog for mobile apps
+            try {
+                await Dialog.alert({
+                    title: title,
+                    message: message,
+                });
+            } catch (error) {
+                console.warn('Capacitor Dialog failed, falling back to toast');
+                this.showToast(message, type);
+            }
+        } else {
+            // Use browser alert for desktop web or fallback to custom toast
+            if (this.isDesktop() && this.shouldUseBrowserAlert(message)) {
+                alert(`${title}: ${message}`);
+            } else {
+                // Use custom toast for better UX
+                this.showToast(message, type);
+            }
+        }
+    }
+
+    static isNativePlatform() {
+        return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) &&
+               !window.chrome; // Exclude Chrome on mobile
+    }
+
+    static isDesktop() {
+        return !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    }
+
+    static shouldUseBrowserAlert(message) {
+        // Only use browser alert on desktop for simple messages
+        return this.isDesktop() && message.length < 100;
+    }
+
+    static showToast(message, type = 'info') {
+        // Create or use existing toast system
+        if (typeof Toast !== 'undefined') {
+            Toast.show(message, type);
+        } else {
+            this.createFallbackToast(message, type);
+        }
+    }
+
+    static createFallbackToast(message, type) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${this.getToastColor(type)};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 10000;
+            max-width: 300px;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            font-family: Arial, sans-serif;
+        `;
+
+        toast.innerHTML = message;
+        document.body.appendChild(toast);
+
+        // Animate in
+        setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+
+        // Auto remove
+        setTimeout(() => {
+            toast.style.transform = 'translateX(400px)';
+            setTimeout(() => {
+                if (toast.parentNode) toast.parentNode.removeChild(toast);
+            }, 300);
+        }, 4000);
+    }
+
+    static getToastColor(type) {
+        const colors = {
+            info: '#0099ff',
+            success: '#00ff00',
+            error: '#e74c3c',
+            warning: '#f39c12'
+        };
+        return colors[type] || colors.info;
+    }
+
+    static async success(message) {
+        await this.show(message, 'Success', 'success');
+    }
+
+    static async error(message) {
+        await this.show(message, 'Error', 'error');
+    }
+
+    static async warning(message) {
+        await this.show(message, 'Warning', 'warning');
+    }
+
+    static async info(message) {
+        await this.show(message, 'Info', 'info');
+    }
+}
+
+// Toast System
+class Toast {
+    static show(message, type = 'info', duration = 4000) {
+        // Remove existing toasts
+        const existingToasts = document.querySelectorAll('.custom-toast');
+        existingToasts.forEach(toast => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                if (toast.parentNode) toast.parentNode.removeChild(toast);
+            }, 300);
+        });
+
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `custom-toast ${type}`;
+        toast.innerHTML = `
+            <span>${message}</span>
+            <button class="toast-close">&times;</button>
+        `;
+
+        // Add to DOM
+        document.body.appendChild(toast);
+
+        // Show toast with slight delay
+        setTimeout(() => toast.classList.add('show'), 100);
+
+        // Close button event
+        toast.querySelector('.toast-close').addEventListener('click', () => {
+            this.hide(toast);
+        });
+
+        // Auto hide
+        if (duration > 0) {
+            setTimeout(() => this.hide(toast), duration);
+        }
+
+        return toast;
+    }
+
+    static hide(toast) {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }
+
+    static success(message, duration = 4000) {
+        return this.show(message, 'success', duration);
+    }
+
+    static error(message, duration = 5000) {
+        return this.show(message, 'error', duration);
+    }
+
+    static warning(message, duration = 4000) {
+        return this.show(message, 'warning', duration);
+    }
+
+    static info(message, duration = 4000) {
+        return this.show(message, 'info', duration);
+    }
+}
+
+// Make notification systems available globally
+window.NotificationManager = NotificationManager;
+window.Toast = Toast;
+
 // Auction functionality
 class CarAuction {
   constructor() {
@@ -230,29 +410,28 @@ class CarAuction {
     }
 
     container.innerHTML = "";
- if (this.filteredAuctions.length === 0) {
-            // Show no results message
-            container.innerHTML = this.createNoResultsMessage();
-            return;
-        }
-
-        this.filteredAuctions.forEach((auction) => {
-            const auctionElement = this.createAuctionElement(auction);
-            container.appendChild(auctionElement);
-        });
-  }
-
- createNoResultsMessage() {
-        return `
-            <div class="no-results">
-                <i class="fas fa-search"></i>
-                <h3>No matching auctions found</h3>
-                <p>Try searching with different keywords like car name, model, or specifications</p>
-                ${this.searchTerm ? `<p>Search term: "${this.searchTerm}"</p>` : ''}
-            </div>
-        `;
+    if (this.filteredAuctions.length === 0) {
+      // Show no results message
+      container.innerHTML = this.createNoResultsMessage();
+      return;
     }
 
+    this.filteredAuctions.forEach((auction) => {
+      const auctionElement = this.createAuctionElement(auction);
+      container.appendChild(auctionElement);
+    });
+  }
+
+  createNoResultsMessage() {
+    return `
+      <div class="no-results">
+        <i class="fas fa-search"></i>
+        <h3>No matching auctions found</h3>
+        <p>Try searching with different keywords like car name, model, or specifications</p>
+        ${this.searchTerm ? `<p>Search term: "${this.searchTerm}"</p>` : ''}
+      </div>
+    `;
+  }
 
   createAuctionElement(auction) {
     const div = document.createElement("div");
@@ -261,19 +440,19 @@ class CarAuction {
     div.onclick = () => this.openCarModal(auction.id);
 
     div.innerHTML = `
-            <img src="${auction.image}" alt="${auction.name}" class="auction-image">
-            <h3 class="car-name">${auction.name}</h3>
-            <p class="car-info">${auction.description}</p>
-            <div class="current-bid">Current Bid: ksh${auction.currentBid.toLocaleString()}</div>
-            <div class="bid-info">
-                <span>Bidders: ${auction.bidderCount}</span>
-                <span>Starting: ksh${auction.startingBid.toLocaleString()}</span>
-            </div>
-            <div class="timer" id="timer-${auction.id}">
-                ${this.formatTimeRemaining(auction.endTime)}
-            </div>
-            ${this.createBidForm(auction)}
-        `;
+      <img src="${auction.image}" alt="${auction.name}" class="auction-image">
+      <h3 class="car-name">${auction.name}</h3>
+      <p class="car-info">${auction.description}</p>
+      <div class="current-bid">Current Bid: ksh${auction.currentBid.toLocaleString()}</div>
+      <div class="bid-info">
+        <span>Bidders: ${auction.bidderCount}</span>
+        <span>Starting: ksh${auction.startingBid.toLocaleString()}</span>
+      </div>
+      <div class="timer" id="timer-${auction.id}">
+        ${this.formatTimeRemaining(auction.endTime)}
+      </div>
+      ${this.createBidForm(auction)}
+    `;
     return div;
   }
 
@@ -285,15 +464,15 @@ class CarAuction {
 
     if (hasEnded) {
       return `
-                <div class="auction-ended">
-                    Auction Ended
-                    ${
-                      auction.bids.length > 0
-                        ? `<div class="winning-bid">Winning Bid: ksh${Math.max(...auction.bids.map((b) => b.amount)).toLocaleString()}</div>`
-                        : "<div>No bids placed</div>"
-                    }
-                </div>
-            `;
+        <div class="auction-ended">
+          Auction Ended
+          ${
+            auction.bids.length > 0
+              ? `<div class="winning-bid">Winning Bid: ksh${Math.max(...auction.bids.map((b) => b.amount)).toLocaleString()}</div>`
+              : "<div>No bids placed</div>"
+          }
+        </div>
+      `;
     }
 
     if (userHasBid) {
@@ -301,19 +480,19 @@ class CarAuction {
     }
 
     return `
-            <div class="bid-form">
-                <input type="number"
-                       class="bid-input"
-                       placeholder="Enter your bid (min: ksh${(auction.currentBid + 1000).toLocaleString()})"
-                       min="${auction.currentBid + 1000}"
-                       step="1000">
-                <button class="bid-btn" onclick="event.stopPropagation(); carAuction.placeBid(${auction.id})"
-                        ${!this.currentUser ? "disabled" : ""}>
-                    Place Bid
-                </button>
-            </div>
-            ${!this.currentUser ? '<p style="text-align:center;margin-top:10px;color:var(--text-color1);">Please login to bid</p>' : ""}
-        `;
+      <div class="bid-form">
+        <input type="number"
+               class="bid-input"
+               placeholder="Enter your bid (min: ksh${(auction.currentBid + 1000).toLocaleString()})"
+               min="${auction.currentBid + 1000}"
+               step="1000">
+        <button class="bid-btn" onclick="event.stopPropagation(); carAuction.placeBid(${auction.id})"
+                ${!this.currentUser ? "disabled" : ""}>
+          Place Bid
+        </button>
+      </div>
+      ${!this.currentUser ? '<p style="text-align:center;margin-top:10px;color:var(--text-color1);">Please login to bid</p>' : ""}
+    `;
   }
 
   formatTimeRemaining(endTime) {
@@ -351,7 +530,7 @@ class CarAuction {
 
   async placeBid(auctionId, bidAmount = null) {
     if (!this.currentUser) {
-      alert("Please login to place a bid");
+      await NotificationManager.warning("Please login to place a bid");
       toggleLogin();
       return;
     }
@@ -366,7 +545,7 @@ class CarAuction {
     }
 
     if (!bidAmount || bidAmount < auction.currentBid + 1000) {
-      alert(
+      await NotificationManager.error(
         `Bid must be at least ksh${(auction.currentBid + 1000).toLocaleString()}`,
       );
       return;
@@ -398,9 +577,9 @@ class CarAuction {
           this.openCarModal(auctionId);
         }
 
-        alert(`Bid of ksh${bidAmount.toLocaleString()} placed successfully!`);
+        await NotificationManager.success(`Bid of ksh${bidAmount.toLocaleString()} placed successfully!`);
       } else {
-        alert("Bid failed: " + result.error);
+        await NotificationManager.error("Bid failed: " + result.error);
       }
     } catch (error) {
       console.error("Bid error:", error);
@@ -421,7 +600,7 @@ class CarAuction {
         this.openCarModal(auctionId);
       }
 
-      alert(`Bid of ksh${bidAmount.toLocaleString()} placed successfully!`);
+      await NotificationManager.success(`Bid of ksh${bidAmount.toLocaleString()} placed successfully!`);
     }
   }
 
@@ -450,43 +629,43 @@ class CarAuction {
       auction.bids.some((bid) => bid.userId === this.currentUser?.id);
 
     return `
-            <div class="media-gallery">
-                <div class="main-media" id="main-media">
-                    <img src="${auction.image}" alt="${auction.name}" id="main-media-display">
-                </div>
-                <div class="media-thumbnails">
-                    ${this.createGalleryThumbnails(auction)}
-                </div>
-            </div>
+      <div class="media-gallery">
+        <div class="main-media" id="main-media">
+          <img src="${auction.image}" alt="${auction.name}" id="main-media-display">
+        </div>
+        <div class="media-thumbnails">
+          ${this.createGalleryThumbnails(auction)}
+        </div>
+      </div>
 
-            <div class="car-info-details">
-                <h2 class="car-title-modal">${auction.name}</h2>
-                <div class="car-price-modal">Current Bid: ksh${auction.currentBid.toLocaleString()}</div>
-                <p class="car-description-modal">${auction.description}</p>
+      <div class="car-info-details">
+        <h2 class="car-title-modal">${auction.name}</h2>
+        <div class="car-price-modal">Current Bid: ksh${auction.currentBid.toLocaleString()}</div>
+        <p class="car-description-modal">${auction.description}</p>
 
-                <div class="car-specs">
-                    <h3 style="color: var(--text-color1); margin-bottom: 15px; font-family: 'boxigen';">Specifications</h3>
-                    ${this.createSpecsList(auction.specs || {})}
-                </div>
+        <div class="car-specs">
+          <h3 style="color: var(--text-color1); margin-bottom: 15px; font-family: 'boxigen';">Specifications</h3>
+          ${this.createSpecsList(auction.specs || {})}
+        </div>
 
-                <div class="timer-modal" id="modal-timer-${auction.id}">
-                    ${this.formatTimeRemaining(auction.endTime)}
-                </div>
+        <div class="timer-modal" id="modal-timer-${auction.id}">
+          ${this.formatTimeRemaining(auction.endTime)}
+        </div>
 
-                ${
-                  hasEnded
-                    ? '<div class="auction-ended" style="margin-top: 20px; text-align: center; padding: 15px; background: rgba(255,0,0,0.3); border-radius: 8px;">Auction Ended</div>'
-                    : this.createModalBidForm(auction, userHasBid)
-                }
-            </div>
-        `;
+        ${
+          hasEnded
+            ? '<div class="auction-ended" style="margin-top: 20px; text-align: center; padding: 15px; background: rgba(255,0,0,0.3); border-radius: 8px;">Auction Ended</div>'
+            : this.createModalBidForm(auction, userHasBid)
+        }
+      </div>
+    `;
   }
 
   createGalleryThumbnails(auction) {
     if (!auction.gallery || auction.gallery.length === 0) {
       return `<div class="thumbnail active" onclick="carAuction.changeMainMedia('${auction.image}', 'image', this)">
-                  <img src="${auction.image}" alt="${auction.name}">
-              </div>`;
+                <img src="${auction.image}" alt="${auction.name}">
+            </div>`;
     }
 
     let thumbnails = "";
@@ -495,8 +674,8 @@ class CarAuction {
 
       thumbnails += `
         <div class="thumbnail ${isActive}" onclick="carAuction.changeMainMedia('${media.src}', '${media.type}', this)">
-            ${media.type === "iframe" ? '<div class="video-indicator">VIDEO</div>' : ""}
-            <img src="${media.type === "iframe" ? auction.image : media.src}" alt="${media.alt}">
+          ${media.type === "iframe" ? '<div class="video-indicator">VIDEO</div>' : ""}
+          <img src="${media.type === "iframe" ? auction.image : media.src}" alt="${media.alt}">
         </div>
       `;
     });
@@ -513,10 +692,10 @@ class CarAuction {
     return specEntries
       .map(
         ([key, value]) => `
-            <div class="spec-item">
-                <span class="spec-label">${this.formatSpecLabel(key)}</span>
-                <span class="spec-value">${value}</span>
-            </div>
+          <div class="spec-item">
+            <span class="spec-label">${this.formatSpecLabel(key)}</span>
+            <span class="spec-value">${value}</span>
+          </div>
         `,
       )
       .join("");
@@ -534,34 +713,34 @@ class CarAuction {
     }
 
     return `
-            <div class="bid-section-modal">
-                <div class="bid-info-modal">
-                    <span>Starting Bid: ksh${auction.startingBid.toLocaleString()}</span>
-                    <span>Bidders: ${auction.bidderCount}</span>
-                </div>
-                ${
-                  this.currentUser
-                    ? `
-                    <div class="bid-form-modal">
-                        <input type="number"
-                               class="bid-input-modal"
-                               placeholder="Enter bid (min: ksh${(auction.currentBid + 1000).toLocaleString()})"
-                               min="${auction.currentBid + 1000}"
-                               step="1000"
-                               id="modal-bid-input-${auction.id}">
-                        <button class="bid-btn-modal" onclick="event.stopPropagation(); carAuction.placeBidFromModal(${auction.id})">
-                            Place Bid
-                        </button>
-                    </div>
-                `
-                    : `
-                    <p style="text-align: center; color: var(--text-color1);">
-                        <a href="#" onclick="toggleLogin(); closeCarModal();" style="color: var(--space-p-color);">Login</a> to place a bid
-                    </p>
-                `
-                }
+      <div class="bid-section-modal">
+        <div class="bid-info-modal">
+          <span>Starting Bid: ksh${auction.startingBid.toLocaleString()}</span>
+          <span>Bidders: ${auction.bidderCount}</span>
+        </div>
+        ${
+          this.currentUser
+            ? `
+            <div class="bid-form-modal">
+              <input type="number"
+                     class="bid-input-modal"
+                     placeholder="Enter bid (min: ksh${(auction.currentBid + 1000).toLocaleString()})"
+                     min="${auction.currentBid + 1000}"
+                     step="1000"
+                     id="modal-bid-input-${auction.id}">
+              <button class="bid-btn-modal" onclick="event.stopPropagation(); carAuction.placeBidFromModal(${auction.id})">
+                Place Bid
+              </button>
             </div>
-        `;
+          `
+            : `
+            <p style="text-align: center; color: var(--text-color1);">
+              <a href="#" onclick="toggleLogin(); closeCarModal();" style="color: var(--space-p-color);">Login</a> to place a bid
+            </p>
+          `
+        }
+      </div>
+    `;
   }
 
   changeMainMedia(src, type, thumbElement) {
@@ -619,68 +798,66 @@ class CarAuction {
       this.handleRegister();
     });
 
-     // Search functionality - ADD THIS
-        const searchInput = document.getElementById("auction-search");
-        if (searchInput) {
-            searchInput.addEventListener("input", (e) => {
-                this.searchTerm = e.target.value.toLowerCase().trim();
-                this.filterAuctions();
-            });
+    // Search functionality
+    const searchInput = document.getElementById("auction-search");
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        this.searchTerm = e.target.value.toLowerCase().trim();
+        this.filterAuctions();
+      });
 
-            // Clear search when Escape is pressed
-            searchInput.addEventListener("keydown", (e) => {
-                if (e.key === 'Escape') {
-                    e.target.value = '';
-                    this.searchTerm = '';
-                    this.filterAuctions();
-                }
-            });
+      // Clear search when Escape is pressed
+      searchInput.addEventListener("keydown", (e) => {
+        if (e.key === 'Escape') {
+          e.target.value = '';
+          this.searchTerm = '';
+          this.filterAuctions();
         }
+      });
+    }
   }
 
-
   filterAuctions() {
-        if (!this.searchTerm) {
-            // If no search term, show all auctions
-            this.filteredAuctions = [...this.auctions];
-        } else {
-            // Filter auctions based on search term
-            this.filteredAuctions = this.auctions.filter(auction =>
-                this.doesAuctionMatchSearch(auction, this.searchTerm)
-            );
-        }
-        this.renderAuctions();
+    if (!this.searchTerm) {
+      // If no search term, show all auctions
+      this.filteredAuctions = [...this.auctions];
+    } else {
+      // Filter auctions based on search term
+      this.filteredAuctions = this.auctions.filter(auction =>
+        this.doesAuctionMatchSearch(auction, this.searchTerm)
+      );
+    }
+    this.renderAuctions();
+  }
+
+  doesAuctionMatchSearch(auction, searchTerm) {
+    // Search in name
+    if (auction.name.toLowerCase().includes(searchTerm)) {
+      return true;
     }
 
-doesAuctionMatchSearch(auction, searchTerm) {
-        // Search in name
-        if (auction.name.toLowerCase().includes(searchTerm)) {
-            return true;
-        }
-
-        // Search in description
-        if (auction.description.toLowerCase().includes(searchTerm)) {
-            return true;
-        }
-
-        // Search in specifications
-        if (auction.specs) {
-            const specValues = Object.values(auction.specs).map(value =>
-                value.toString().toLowerCase()
-            );
-            if (specValues.some(value => value.includes(searchTerm))) {
-                return true;
-            }
-        }
-
-        // Search in current bid (as string)
-        if (auction.currentBid.toString().includes(searchTerm)) {
-            return true;
-        }
-
-        return false;
+    // Search in description
+    if (auction.description.toLowerCase().includes(searchTerm)) {
+      return true;
     }
 
+    // Search in specifications
+    if (auction.specs) {
+      const specValues = Object.values(auction.specs).map(value =>
+        value.toString().toLowerCase()
+      );
+      if (specValues.some(value => value.includes(searchTerm))) {
+        return true;
+      }
+    }
+
+    // Search in current bid (as string)
+    if (auction.currentBid.toString().includes(searchTerm)) {
+      return true;
+    }
+
+    return false;
+  }
 
   async handleLogin() {
     const form = document.getElementById("login-form");
@@ -703,9 +880,9 @@ doesAuctionMatchSearch(auction, searchTerm) {
         toggleLogin();
         this.checkLoginStatus();
         await this.loadAuctions();
-        alert("Login successful!");
+        await NotificationManager.success("Login successful!");
       } else {
-        alert("Login failed: " + result.error);
+        await NotificationManager.error("Login failed: " + result.error);
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -720,9 +897,9 @@ doesAuctionMatchSearch(auction, searchTerm) {
         toggleLogin();
         this.checkLoginStatus();
         this.renderAuctions();
-        alert("Login successful!");
+        await NotificationManager.success("Login successful!");
       } else {
-        alert("Please enter both email and password");
+        await NotificationManager.error("Please enter both email and password");
       }
     }
   }
@@ -761,10 +938,10 @@ doesAuctionMatchSearch(auction, searchTerm) {
           toggleRegister();
           this.checkLoginStatus();
           await this.loadAuctions();
-          alert("Registration successful! You are now logged in.");
+          await NotificationManager.success("Registration successful! You are now logged in.");
         }
       } else {
-        alert("Registration failed: " + result.error);
+        await NotificationManager.error("Registration failed: " + result.error);
       }
     } catch (error) {
       console.error("Registration error:", error);
@@ -779,27 +956,52 @@ doesAuctionMatchSearch(auction, searchTerm) {
         toggleRegister();
         this.checkLoginStatus();
         this.renderAuctions();
-        alert("Registration successful! You are now logged in.");
+        await NotificationManager.success("Registration successful! You are now logged in.");
       } else {
-        alert("Please fill all fields");
+        await NotificationManager.error("Please fill all fields");
       }
     }
   }
 
   checkLoginStatus() {
     const loginBtn = document.getElementById("login-btn");
-    if (this.currentUser) {
-      loginBtn.innerHTML = `<a href="#" onclick="carAuction.logout()">Logout </a>`;
-    } else {
-      loginBtn.innerHTML = '<a href="#" onclick="toggleLogin()">Login</a>';
-    }
-  }
 
-  logout() {
+    // Find the mobile login button by searching in the mobile menu
+    const mobileMenu = document.getElementById("mobile-menu");
+    let mobileLoginBtn = null;
+
+    if (mobileMenu) {
+        // Find the login link in the mobile menu
+        const mobileLoginLink = mobileMenu.querySelector('a[onclick*="toggleLogin"]');
+        if (mobileLoginLink && mobileLoginLink.parentElement) {
+            mobileLoginBtn = mobileLoginLink.parentElement;
+        }
+    }
+
+    if (this.currentUser) {
+        // Update desktop menu
+        loginBtn.innerHTML = `<a href="#" onclick="carAuction.logout()">Logout</a>`;
+
+        // Update mobile menu
+        if (mobileLoginBtn) {
+            mobileLoginBtn.innerHTML = `<a href="#" onclick="carAuction.logout(); document.getElementById('mobile-menu').classList.remove('active');">Logout</a>`;
+        }
+    } else {
+        // Update desktop menu
+        loginBtn.innerHTML = '<a href="#" onclick="toggleLogin()">Login</a>';
+
+        // Update mobile menu
+        if (mobileLoginBtn) {
+            mobileLoginBtn.innerHTML = '<a href="#" onclick="toggleLogin(); document.getElementById(\'mobile-menu\').classList.remove(\'active\');">Login</a>';
+        }
+    }
+}
+
+  async logout() {
     this.currentUser = null;
     this.checkLoginStatus();
     this.renderAuctions();
-    alert("Logged out successfully");
+    await NotificationManager.success("Logged out successfully");
   }
 }
 
