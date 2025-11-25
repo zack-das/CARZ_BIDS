@@ -18,7 +18,7 @@ Users can place bids during active auctions.
 
 Countdown timer displays remaining time for each auction.
 
-Once the timer ends, the highest bidder automatically wins.
+<!--Once the timer ends, the highest bidder automatically wins.-->
 
 🕒 Auction Timer
 
