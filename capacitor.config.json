@@ -1,6 +1,6 @@
 {
   "appId": "com.carz.app",
-  "appName": "carzApp",
+  "appName": "CarBidz",
   "webDir": "www",
   "plugins": {
     "SplashScreen": {
