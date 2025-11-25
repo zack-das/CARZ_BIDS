@@ -965,12 +965,37 @@ class CarAuction {
 
   checkLoginStatus() {
     const loginBtn = document.getElementById("login-btn");
-    if (this.currentUser) {
-      loginBtn.innerHTML = `<a href="#" onclick="carAuction.logout()">Logout </a>`;
-    } else {
-      loginBtn.innerHTML = '<a href="#" onclick="toggleLogin()">Login</a>';
+
+    // Find the mobile login button by searching in the mobile menu
+    const mobileMenu = document.getElementById("mobile-menu");
+    let mobileLoginBtn = null;
+
+    if (mobileMenu) {
+        // Find the login link in the mobile menu
+        const mobileLoginLink = mobileMenu.querySelector('a[onclick*="toggleLogin"]');
+        if (mobileLoginLink && mobileLoginLink.parentElement) {
+            mobileLoginBtn = mobileLoginLink.parentElement;
+        }
     }
-  }
+
+    if (this.currentUser) {
+        // Update desktop menu
+        loginBtn.innerHTML = `<a href="#" onclick="carAuction.logout()">Logout</a>`;
+
+        // Update mobile menu
+        if (mobileLoginBtn) {
+            mobileLoginBtn.innerHTML = `<a href="#" onclick="carAuction.logout(); document.getElementById('mobile-menu').classList.remove('active');">Logout</a>`;
+        }
+    } else {
+        // Update desktop menu
+        loginBtn.innerHTML = '<a href="#" onclick="toggleLogin()">Login</a>';
+
+        // Update mobile menu
+        if (mobileLoginBtn) {
+            mobileLoginBtn.innerHTML = '<a href="#" onclick="toggleLogin(); document.getElementById(\'mobile-menu\').classList.remove(\'active\');">Login</a>';
+        }
+    }
+}
 
   async logout() {
     this.currentUser = null;
