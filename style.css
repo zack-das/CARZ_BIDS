@@ -1509,25 +1509,6 @@ footer {
     }
 }
 
-/* Print Styles */
-@media print {
-    .mobile-menu,
-    #menu-icon,
-    .bid-form,
-    .bid-form-modal {
-        display: none !important;
-    }
-
-    body {
-        background: white !important;
-        color: black !important;
-    }
-
-    .hero h1 {
-        color: black !important;
-        -webkit-text-stroke: 0 !important;
-    }
-}
 
 /* Reduced motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
