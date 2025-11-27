@@ -7,187 +7,74 @@ const bodyParser = require('body-parser');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
+// Middleware configuration
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, '../')));
 
-app.use(express.static(path.join(__dirname, '../')));
-app.use(express.static(path.join(__dirname, '../css'))); // Add CSS directory
-app.use(express.static(path.join(__dirname, '../js')));  // Add JS directory
-app.use(express.static(path.join(__dirname, '../img'))); // Add images directory
+// Database configuration
+const dbPath = path.join(__dirname, 'carz_auctions.db');
 
-// Specific route for CSS files to ensure they're served correctly
-app.get('*.css', (req, res, next) => {
-  res.setHeader('Content-Type', 'text/css');
-  next();
-});
-
-// FIXED: Database path - point to project root where Python creates it
-const dbPath = path.join(__dirname, '../carz_auctions.db');
-console.log('Database path:', dbPath);
-
+// Initialize database connection
 const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
   if (err) {
-    console.error('❌ Error opening database:', err.message);
+    console.error('Error opening database:', err.message);
+    process.exit(1);
   } else {
     console.log('Connected to SQLite database');
-
-    // Verify tables exist on startup
     verifyDatabaseTables();
   }
 });
 
-// Function to verify and create tables if they don't exist
+/**
+ * Verify that required database tables exist
+ * Logs warning if tables are missing (requires Python initialization)
+ */
 function verifyDatabaseTables() {
-  console.log('🔍 Verifying database tables...');
-
-  const createTablesSQL = `
-    -- Users table
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
-      name TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    -- Auctions table
-    CREATE TABLE IF NOT EXISTS auctions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      car_name TEXT NOT NULL,
-      car_description TEXT,
-      image_url TEXT,
-      starting_bid REAL NOT NULL,
-      current_bid REAL NOT NULL,
-      end_time TIMESTAMP NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      status TEXT DEFAULT 'active'
-    );
-
-    -- Bids table
-    CREATE TABLE IF NOT EXISTS bids (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      auction_id INTEGER,
-      user_id INTEGER,
-      amount REAL NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (auction_id) REFERENCES auctions (id),
-      FOREIGN KEY (user_id) REFERENCES users (id)
-    );
-  `;
-
-  db.exec(createTablesSQL, (err) => {
+  db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
     if (err) {
-      console.error('❌ Error creating tables:', err);
-    } else {
-      console.log('Database tables verified/created');
+      console.error('Error checking database tables:', err);
+      return;
+    }
 
-      // Check if we have sample data
+    if (tables.length === 0) {
+      console.log('No database tables found. Please run: python init_db.py');
+    } else {
       checkSampleData();
     }
   });
 }
 
-// Function to check if we need sample data
+/**
+ * Check if sample data exists in the database
+ * Provides guidance if no auctions are found
+ */
 function checkSampleData() {
   db.get('SELECT COUNT(*) as count FROM auctions', (err, row) => {
     if (err) {
-      console.error('❌ Error checking auctions:', err);
+      console.error('Error checking auction data:', err);
       return;
     }
 
     if (row.count === 0) {
-      console.log('No auctions found, adding sample data...');
-      addSampleData();
-    } else {
-      console.log(`Found ${row.count} auctions in database`);
+      console.log('No auctions found in database');
     }
   });
 }
 
-// Function to add sample data
-function addSampleData() {
-  const sampleAuctions = [
-    ['Toyota Camry 2022', 'Like new with low mileage', 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=400', 15000, 15000, '2024-12-31 23:59:59'],
-    ['Ford Mustang GT', 'Brand new sports car', 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=400', 45000, 45000, '2024-12-25 23:59:59'],
-    ['Honda Civic 2021', 'Well maintained, great condition', 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400', 20000, 20000, '2024-12-20 23:59:59']
-  ];
-
-  const insertAuctionSQL = `
-    INSERT INTO auctions (car_name, car_description, image_url, starting_bid, current_bid, end_time)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `;
-
-  sampleAuctions.forEach((auction, index) => {
-    db.run(insertAuctionSQL, auction, function(err) {
-      if (err) {
-        console.error(`❌ Error inserting auction ${index + 1}:`, err);
-      } else {
-        console.log(` Added auction: ${auction[0]}`);
-      }
-    });
-  });
-
-  // Add a test user
-  db.run(
-    'INSERT OR IGNORE INTO users (email, password, name) VALUES (?, ?, ?)',
-    ['test@example.com', 'password123', 'Test User'],
-    function(err) {
-      if (err) {
-        console.error('❌ Error adding test user:', err);
-      } else {
-        console.log(' Added test user: test@example.com');
-      }
-    }
-  );
-}
-
-// Enable foreign keys
+// Enable foreign key constraints for data integrity
 db.run('PRAGMA foreign_keys = ON');
 
-// Debug endpoint to check database status
-app.get('/api/debug/db-status', (req, res) => {
-  db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+// API Endpoints
 
-    const tableCounts = {};
-    let completed = 0;
-
-    if (tables.length === 0) {
-      return res.json({ tables: [], counts: {} });
-    }
-
-    tables.forEach(table => {
-      db.get(`SELECT COUNT(*) as count FROM ${table.name}`, (err, row) => {
-        if (err) {
-          tableCounts[table.name] = 'Error';
-        } else {
-          tableCounts[table.name] = row.count;
-        }
-
-        completed++;
-        if (completed === tables.length) {
-          res.json({
-            database: dbPath,
-            tables: tables.map(t => t.name),
-            counts: tableCounts,
-            status: 'OK'
-          });
-        }
-      });
-    });
-  });
-});
-
-// Register endpoint
+/**
+ * User registration endpoint
+ * Creates new user account with email, password, and name
+ */
 app.post('/api/register', (req, res) => {
-  console.log('Registration attempt:', req.body.email);
-
   const { name, email, password } = req.body;
 
+  // Validate required fields
   if (!name || !email || !password) {
     return res.status(400).json({ success: false, error: 'All fields are required' });
   }
@@ -197,14 +84,12 @@ app.post('/api/register', (req, res) => {
     [email, password, name],
     function(err) {
       if (err) {
-        console.error('❌ Registration error:', err.message);
         if (err.message.includes('UNIQUE constraint failed')) {
           return res.status(400).json({ success: false, error: 'Email already exists' });
         }
         return res.status(500).json({ success: false, error: 'Database error' });
       }
 
-      console.log('User registered:', email);
       res.json({
         success: true,
         user_id: this.lastID,
@@ -214,7 +99,10 @@ app.post('/api/register', (req, res) => {
   );
 });
 
-// Login endpoint
+/**
+ * User login endpoint
+ * Authenticates user with email and password
+ */
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
 
@@ -227,7 +115,6 @@ app.post('/api/login', (req, res) => {
     [email, password],
     (err, row) => {
       if (err) {
-        console.error('❌ Login error:', err);
         return res.status(500).json({ success: false, error: 'Database error' });
       }
 
@@ -248,14 +135,15 @@ app.post('/api/login', (req, res) => {
   );
 });
 
-// Auctions endpoint
+/**
+ * Get all active auctions with gallery and specifications
+ * Returns formatted auction data with parsed JSON fields
+ */
 app.get('/api/auctions', (req, res) => {
-  console.log('Fetching auctions...');
-
   const query = `
     SELECT
       a.*,
-      COUNT(DISTINCT b.user_id) as bidder_count
+      COUNT(DISTINCT b.user_id) as actual_bidder_count
     FROM auctions a
     LEFT JOIN bids b ON a.id = b.auction_id
     WHERE a.status = 'active'
@@ -265,123 +153,231 @@ app.get('/api/auctions', (req, res) => {
 
   db.all(query, [], (err, rows) => {
     if (err) {
-      console.error('❌ Error fetching auctions:', err.message);
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to fetch auctions',
-        details: err.message
-      });
+      console.error('Error fetching auctions:', err.message);
+      return res.status(500).json({ error: 'Failed to fetch auctions' });
     }
 
-    console.log(`Found ${rows.length} auctions`);
-    res.json(rows);
+    // Parse gallery and specs JSON fields
+    const auctions = rows.map(row => {
+      const auction = { ...row };
+
+      // Parse gallery JSON
+      if (row.gallery_json) {
+        try {
+          auction.gallery = JSON.parse(row.gallery_json);
+        } catch (e) {
+          auction.gallery = [];
+        }
+      } else {
+        auction.gallery = [];
+      }
+
+      // Parse specifications JSON
+      if (row.specs_json) {
+        try {
+          auction.specs = JSON.parse(row.specs_json);
+        } catch (e) {
+          auction.specs = {};
+        }
+      } else {
+        auction.specs = {};
+      }
+
+      return auction;
+    });
+
+    res.json(auctions);
   });
 });
 
-// Bid endpoint
+/**
+ * Place bid on auction endpoint
+ * Handles bid validation, user checks, and auction updates
+ */
 app.post('/api/auctions/:id/bid', (req, res) => {
   const auctionId = req.params.id;
   const { user_id, amount } = req.body;
 
-  console.log(`💰 Bid attempt: auction=${auctionId}, user=${user_id}, amount=${amount}`);
-
+  // Validate required parameters
   if (!user_id || !amount) {
     return res.status(400).json({ success: false, error: 'User ID and amount are required' });
   }
 
-  // Check if auction exists and is active
+  // Use transaction for data consistency
+  db.serialize(() => {
+    // Check if auction exists and is active
+    db.get(
+      'SELECT * FROM auctions WHERE id = ? AND status = "active"',
+      [auctionId],
+      (err, auction) => {
+        if (err) {
+          console.error('Database error checking auction:', err);
+          return res.status(500).json({ success: false, error: 'Database error checking auction' });
+        }
+
+        if (!auction) {
+          return res.status(404).json({ success: false, error: 'Auction not found or ended' });
+        }
+
+        // Check if auction has ended
+        if (new Date() > new Date(auction.end_time)) {
+          return res.status(400).json({ success: false, error: 'Auction has ended' });
+        }
+
+        // Check if user has already bid on this auction
+        db.get(
+          'SELECT * FROM bids WHERE auction_id = ? AND user_id = ?',
+          [auctionId, user_id],
+          (err, existingBid) => {
+            if (err) {
+              console.error('Database error checking existing bid:', err);
+              return res.status(500).json({ success: false, error: 'Database error checking existing bid' });
+            }
+
+            if (existingBid) {
+              return res.status(400).json({
+                success: false,
+                error: 'You have already placed a bid on this vehicle'
+              });
+            }
+
+            // Validate bid amount
+            if (amount <= auction.current_bid) {
+              return res.status(400).json({
+                success: false,
+                error: `Bid must be higher than current bid of ksh${auction.current_bid.toLocaleString()}`
+              });
+            }
+
+            // Place the bid
+            db.run(
+              'INSERT INTO bids (auction_id, user_id, amount) VALUES (?, ?, ?)',
+              [auctionId, user_id, amount],
+              function(err) {
+                if (err) {
+                  console.error('Error inserting bid:', err);
+                  return res.status(500).json({ success: false, error: 'Failed to place bid' });
+                }
+
+                // Update auction current bid
+                db.run(
+                  'UPDATE auctions SET current_bid = ? WHERE id = ?',
+                  [amount, auctionId],
+                  (err) => {
+                    if (err) {
+                      console.error('Error updating auction current bid:', err);
+                      return res.status(500).json({ success: false, error: 'Failed to update auction' });
+                    }
+
+                    res.json({
+                      success: true,
+                      message: 'Bid placed successfully!'
+                    });
+                  }
+                );
+              }
+            );
+          }
+        );
+      }
+    );
+  });
+});
+
+/**
+ * Check if user has already bid on specific auction
+ */
+app.get('/api/auctions/:id/user-bid/:userId', (req, res) => {
+  const { id, userId } = req.params;
+
   db.get(
-    'SELECT * FROM auctions WHERE id = ? AND status = "active"',
-    [auctionId],
-    (err, auction) => {
+    'SELECT * FROM bids WHERE auction_id = ? AND user_id = ?',
+    [id, userId],
+    (err, row) => {
       if (err) {
         return res.status(500).json({ success: false, error: 'Database error' });
       }
 
-      if (!auction) {
-        return res.status(404).json({ success: false, error: 'Auction not found or ended' });
-      }
-
-      if (amount <= auction.current_bid) {
-        return res.status(400).json({
-          success: false,
-          error: 'Bid must be higher than current bid'
-        });
-      }
-
-      // Check if user already bid
-      db.get(
-        'SELECT * FROM bids WHERE auction_id = ? AND user_id = ?',
-        [auctionId, user_id],
-        (err, existingBid) => {
-          if (err) {
-            return res.status(500).json({ success: false, error: 'Database error' });
-          }
-
-          if (existingBid) {
-            return res.status(400).json({
-              success: false,
-              error: 'You have already placed a bid on this auction'
-            });
-          }
-
-          // Place the bid
-          db.run(
-            'INSERT INTO bids (auction_id, user_id, amount) VALUES (?, ?, ?)',
-            [auctionId, user_id, amount],
-            function(err) {
-              if (err) {
-                return res.status(500).json({ success: false, error: 'Failed to place bid' });
-              }
-
-              // Update current bid
-              db.run(
-                'UPDATE auctions SET current_bid = ? WHERE id = ?',
-                [amount, auctionId],
-                (err) => {
-                  if (err) {
-                    return res.status(500).json({ success: false, error: 'Failed to update auction' });
-                  }
-
-                  res.json({
-                    success: true,
-                    message: 'Bid placed successfully'
-                  });
-                }
-              );
-            }
-          );
-        }
-      );
+      res.json({ hasBid: !!row });
     }
   );
 });
 
-// Serve the main page
+/**
+ * Database status endpoint for monitoring
+ * Returns database structure and table counts
+ */
+app.get('/api/debug/db-status', (req, res) => {
+  db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    const tableCounts = {};
+    let completed = 0;
+
+    if (tables.length === 0) {
+      return res.json({ tables: [], counts: {} });
+    }
+
+    tables.forEach(table => {
+      db.get(`SELECT COUNT(*) as count FROM ${table.name}`, (err, row) => {
+        tableCounts[table.name] = row ? row.count : 'Error';
+        completed++;
+        if (completed === tables.length) {
+          res.json({
+            database: dbPath,
+            tables: tables.map(t => t.name),
+            counts: tableCounts,
+            status: 'OK'
+          });
+        }
+      });
+    });
+  });
+});
+
+/**
+ * Get specific auction details for debugging
+ */
+app.get('/api/debug/auctions/:id', (req, res) => {
+  const auctionId = req.params.id;
+
+  db.get(
+    'SELECT * FROM auctions WHERE id = ?',
+    [auctionId],
+    (err, auction) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      if (!auction) {
+        return res.status(404).json({ error: 'Auction not found' });
+      }
+
+      res.json(auction);
+    }
+  );
+});
+
+// Serve the main application page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../index.html'));
 });
 
-// Start server
+// Start the server
 app.listen(PORT, () => {
-  console.log('Server started successfully!');
-  console.log(`Server running on: http://localhost:${PORT}`);
-  console.log('\n Debug endpoints:');
-  console.log(`   GET  http://localhost:${PORT}/api/debug/db-status`);
-  console.log('\nMain endpoints:');
-  console.log(`   POST http://localhost:${PORT}/api/register`);
-  console.log(`   POST http://localhost:${PORT}/api/login`);
-  console.log(`   GET  http://localhost:${PORT}/api/auctions`);
+  console.log(`Car Auction Server Started`);
+  console.log(`Local: http://localhost:${PORT}`);
+  console.log(`API: http://localhost:${PORT}/api/auctions`);
 });
-
-// Graceful shutdown
+// shutdown
 process.on('SIGINT', () => {
-  console.log('\n Shutting down server...');
   db.close((err) => {
     if (err) {
       console.error('Error closing database:', err.message);
     } else {
-      console.log('Database connection closed.');
+      console.log('Database connection closed');
     }
     process.exit(0);
   });
