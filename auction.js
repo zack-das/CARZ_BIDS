@@ -235,12 +235,43 @@ window.Toast = Toast;
 // Auction functionality
 class CarAuction {
   constructor() {
-    this.currentUser = null;
+    this.currentUser = this.getStoredUser();
     this.auctions = [];
     this.filteredAuctions = [];
-    this.API_BASE = "https://carz-bids.onrender.com/api"; // Backend API base URL
+    this.API_BASE = "https://carz-bids.onrender.com"; // Backend API base URL
     this.searchTerm = '';
     this.init();
+  }
+
+  storeUser(user) {
+    if (user) {
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      sessionStorage.setItem('currentUser', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('currentUser');
+      sessionStorage.removeItem('currentUser');
+    }
+  }
+
+  getStoredUser() {
+    // Try localStorage first
+    let userData = localStorage.getItem('currentUser');
+
+    if (!userData) {
+      // Fallback to sessionStorage
+      userData = sessionStorage.getItem('currentUser');
+    }
+
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        return user;
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+        return null;
+      }
+    }
+    return null;
   }
 
   async init() {
@@ -251,152 +282,41 @@ class CarAuction {
 
   async loadAuctions() {
     try {
-      const response = await fetch(`${this.API_BASE}/auctions`);
+      const response = await fetch(`${this.API_BASE}/api/auctions`);
       if (!response.ok) {
         throw new Error("Failed to fetch auctions");
       }
-      const auctions = await response.json();
-      this.auctions = auctions.map((auction) => ({
-        ...auction,
-        endTime: new Date(auction.end_time),
-        bids: [], // Initialize empty bids array
-      }));
-      this.filteredAuctions = [...this.auctions];
 
+      const auctions = await response.json();
+
+      // Properly map backend data to frontend structure
+      this.auctions = auctions.map((auction) => ({
+        id: auction.id,
+        name: auction.car_name,
+        image: auction.image_url,
+        description: auction.car_description,
+        startingBid: auction.starting_bid,
+        currentBid: auction.current_bid,
+        bidderCount: auction.actual_bidder_count || auction.bidder_count,
+        endTime: new Date(auction.end_time),
+        bids: [],
+        gallery: auction.gallery || [],
+        specs: auction.specs || {}
+      }));
+
+      this.filteredAuctions = [...this.auctions];
       this.renderAuctions();
       this.startTimers();
+
     } catch (error) {
       console.error("Failed to load auctions:", error);
-      // Fallback to sample data if server is not available
-      this.loadSampleAuctions();
+      await NotificationManager.error("Failed to load auctions from server");
     }
   }
 
   loadSampleAuctions() {
     // Sample auction data with gallery and specs
-    this.auctions = [
-      {
-        id: 1,
-        name: "Pagani Huayra",
-        image: "/img/imgi_265_18015-MC20BluInfinito-scaled-e1707920217641.jpg",
-        description:
-          "Mid-engine sports car produced by Italian automaker Pagani",
-        startingBid: 2500000,
-        currentBid: 2650000,
-        bidderCount: 8,
-        endTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        bids: [],
-        gallery: [
-          {
-            type: "image",
-            src: "/img/imgi_265_18015-MC20BluInfinito-scaled-e1707920217641.jpg",
-            alt: "Pagani Huayra Front",
-          },
-          {
-            type: "image",
-            src: "/img/imgi_265_18015-MC20BluInfinito-scaled-e1707920217641.jpg",
-            alt: "Pagani Huayra Side",
-          },
-          {
-            type: "iframe",
-            src: "https://www.youtube.com/embed/1rYKERKZOgc",
-            alt: "Pagani Huayra Interior",
-          },
-        ],
-        specs: {
-          engine: "6.0L V12",
-          horsepower: "730 hp",
-          torque: "740 lb-ft",
-          acceleration: "2.8s 0-60 mph",
-          topSpeed: "238 mph",
-          transmission: "7-speed automatic",
-        },
-      },
-      {
-        id: 2,
-        name: "Porsche Taycan Turbo",
-        image: "/img/imgi_263_prosche-electric-car-01.jpg",
-        description: "All-electric luxury sports sedan",
-        startingBid: 185000,
-        currentBid: 210000,
-        bidderCount: 12,
-        endTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-        bids: [],
-        gallery: [
-          {
-            type: "image",
-            src: "/img/imgi_263_prosche-electric-car-01.jpg",
-            alt: "Porsche Taycan Front",
-          },
-          {
-            type: "iframe",
-            src: "https://www.youtube.com/embed/Oi-xWqXnufI",
-            alt: "Porsche Taycan Interior",
-          },
-        ],
-        specs: {
-          engine: "Dual Electric Motors",
-          horsepower: "750 hp",
-          torque: "774 lb-ft",
-          acceleration: "2.6s 0-60 mph",
-          topSpeed: "161 mph",
-          range: "201 miles",
-        },
-      },
-      {
-        id: 3,
-        name: "Nissan Leaf",
-        image:
-          "/img/imgi_253_250308-all-new-nissan-leaf-dynamic-pictures-01.jpg",
-        description: "Compact all-electric hatchback",
-        startingBid: 28000,
-        currentBid: 31500,
-        bidderCount: 5,
-        endTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-        bids: [],
-        gallery: [
-          {
-            type: "iframe",
-            src: "https://www.youtube.com/embed/TDklt0vweyA",
-            alt: "Nissan Leaf Front",
-          },
-        ],
-        specs: {
-          engine: "Electric Motor",
-          horsepower: "147 hp",
-          torque: "236 lb-ft",
-          acceleration: "7.4s 0-60 mph",
-          topSpeed: "89 mph",
-          range: "149 miles",
-        },
-      },
-      {
-        id: 4,
-        name: "Rolls Royce Phantom",
-        image: "/img/imgi_247_rolls_royce_phantom_top_10.jpg",
-        description: "Full-sized luxury saloon car",
-        startingBid: 450000,
-        currentBid: 485000,
-        bidderCount: 6,
-        endTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        bids: [],
-        gallery: [
-          {
-            type: "iframe",
-            src: "https://www.youtube.com/embed/FzO6KdXHeeU",
-            alt: "Rolls Royce Phantom",
-          },
-        ],
-        specs: {
-          engine: "6.75L V12",
-          horsepower: "563 hp",
-          torque: "664 lb-ft",
-          acceleration: "5.1s 0-60 mph",
-          topSpeed: "155 mph",
-          transmission: "8-speed automatic",
-        },
-      },
-    ];
+    this.auctions = [];
     this.filteredAuctions = [...this.auctions];
     this.renderAuctions();
     this.startTimers();
@@ -458,9 +378,9 @@ class CarAuction {
 
   createBidForm(auction) {
     const hasEnded = auction.endTime <= new Date();
-    const userHasBid =
-      this.currentUser &&
-      auction.bids.some((bid) => bid.userId === this.currentUser?.id);
+    const userHasBid = this.currentUser &&
+    (auction.bids.some((bid) => bid.userId === this.currentUser?.id) ||
+     this.checkUserBidStatusLocal(auction.id));
 
     if (hasEnded) {
       return `
@@ -493,6 +413,19 @@ class CarAuction {
       </div>
       ${!this.currentUser ? '<p style="text-align:center;margin-top:10px;color:var(--text-color1);">Please login to bid</p>' : ""}
     `;
+  }
+
+  checkUserBidStatusLocal(auctionId) {
+    // This would ideally make an API call to check if user has bid
+    // For now, return false - the real check happens when placing bid
+    return false;
+  }
+
+  endAuction(auctionId) {
+    const auction = this.auctions.find(a => a.id === auctionId);
+    if (auction) {
+      // Auction ended logic can be added here
+    }
   }
 
   formatTimeRemaining(endTime) {
@@ -553,7 +486,7 @@ class CarAuction {
 
     try {
       const response = await fetch(
-        `${this.API_BASE}/auctions/${auctionId}/bid`,
+         `${this.API_BASE}/api/auctions/${auctionId}/bid`,
         {
           method: "POST",
           headers: {
@@ -865,7 +798,7 @@ class CarAuction {
     const password = form.querySelector('input[type="password"]').value;
 
     try {
-      const response = await fetch(`${this.API_BASE}/login`, {
+       const response = await fetch(`${this.API_BASE}/api/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -877,6 +810,7 @@ class CarAuction {
 
       if (result.success) {
         this.currentUser = result.user;
+        this.storeUser(result.user);
         toggleLogin();
         this.checkLoginStatus();
         await this.loadAuctions();
@@ -893,7 +827,7 @@ class CarAuction {
           email: email,
           name: email.split("@")[0],
         };
-
+        this.storeUser(this.currentUser);
         toggleLogin();
         this.checkLoginStatus();
         this.renderAuctions();
@@ -911,7 +845,7 @@ class CarAuction {
     const password = form.querySelector('input[type="password"]').value;
 
     try {
-      const response = await fetch(`${this.API_BASE}/register`, {
+      const response = await fetch(`${this.API_BASE}/api/register`,{
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -923,7 +857,7 @@ class CarAuction {
 
       if (result.success) {
         // Auto-login after successful registration
-        const loginResponse = await fetch(`${this.API_BASE}/login`, {
+        const loginResponse = await fetch(`${this.API_BASE}/api/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -995,10 +929,11 @@ class CarAuction {
             mobileLoginBtn.innerHTML = '<a href="#" onclick="toggleLogin(); document.getElementById(\'mobile-menu\').classList.remove(\'active\');">Login</a>';
         }
     }
-}
+  }
 
   async logout() {
     this.currentUser = null;
+    this.storeUser(null);
     this.checkLoginStatus();
     this.renderAuctions();
     await NotificationManager.success("Logged out successfully");
