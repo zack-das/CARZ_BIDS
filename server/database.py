@@ -280,8 +280,8 @@ class CarAuctionDB:
                 "Porsche Taycan Turbo",
                 "All-electric luxury sports sedan",
                 "/img/imgi_263_prosche-electric-car-01.jpg",
-                185000,
-                210000,
+                18000000,
+                16000000,
                 12,
                 (now + timedelta(days=2)).strftime('%Y-%m-%d %H:%M:%S'),
                 json.dumps([
@@ -310,7 +310,7 @@ class CarAuctionDB:
                 "Compact all-electric hatchback",
                 "/img/imgi_253_250308-all-new-nissan-leaf-dynamic-pictures-01.jpg",
                 1100000,
-                31500,
+                9000000,
                 5,
                 (now + timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S'),
                 json.dumps([
@@ -333,8 +333,8 @@ class CarAuctionDB:
                 "Rolls Royce Phantom",
                 "Full-sized luxury saloon car",
                 "/img/imgi_247_rolls_royce_phantom_top_10.jpg",
-                450000,
-                485000,
+                45000000,
+                5000000,
                 6,
                 (now + timedelta(days=3)).strftime('%Y-%m-%d %H:%M:%S'),
                 json.dumps([
